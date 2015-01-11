@@ -1,5 +1,4 @@
 #include "mem_management.h"
-#include "stdio.h"
 
 #ifdef STATIC_HEAP
 byte  heap[0xE000];
