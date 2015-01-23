@@ -8,3 +8,17 @@ bin/
 
 .*.un~
 .*.sw*
+
+# uvision shit
+*.plg
+*.sct
+*.tra
+*.dep
+
+# random build shit
+*.crf
+*.axf
+*.htm
+*.lnp
+*.map
+*.lst
