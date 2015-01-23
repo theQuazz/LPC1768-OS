@@ -5,6 +5,8 @@
 
 typedef unsigned char byte;
 
+extern byte Image$$RW_IRAM1$$ZI$$Limit;
+
 struct mem_blk {
   byte blk[BLK_SIZE];
   struct mem_blk *next;

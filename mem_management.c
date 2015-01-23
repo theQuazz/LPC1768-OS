@@ -5,8 +5,8 @@ byte  heap[0xE000];
 const byte *START_ADDR = heap;
 const byte *END_ADDR   = heap + 0xE000;
 #else
-const byte *START_ADDR = (void *) 0x1000;
-const byte *END_ADDR   = (void *) 0xF000;
+const byte *START_ADDR = (void *) Image$$RW_IRAM1$$ZI$$Limit;
+const byte *END_ADDR   = (void *) 0x10007FFF;
 #endif
 
 struct mem_blk *first_free_blk = NULL;
