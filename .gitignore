@@ -21,4 +21,6 @@ bin/
 *.htm
 *.lnp
 *.map
+*.bak
+*.iex
 *.lst

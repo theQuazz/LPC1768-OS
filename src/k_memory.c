@@ -112,10 +112,11 @@ U32 *alloc_stack(U32 size_b)
 }
 
 void *k_request_memory_block(void) {
+	MEM_BLK *first = first_free_blk;
+
 #ifdef DEBUG_0 
 	printf("k_request_memory_block: entering...\n");
 #endif /* ! DEBUG_0 */
-	MEM_BLK *first = first_free_blk;
 
   if (!first) return NULL;
 
@@ -126,10 +127,11 @@ void *k_request_memory_block(void) {
 }
 
 int k_release_memory_block(void *memory_block) {
-#ifdef DEBUG_0 
-	printf("k_release_memory_block: releasing block @ 0x%x\n", p_mem_blk);
-#endif /* ! DEBUG_0 */
 	MEM_BLK *first = memory_block;
+
+#ifdef DEBUG_0 
+	printf("k_release_memory_block: releasing block @ 0x%x\n", memory_block);
+#endif /* ! DEBUG_0 */
 
   if (first->free) return RTX_ERR;
 
