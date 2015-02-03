@@ -16,6 +16,7 @@
 
 #define INITIAL_xPSR 0x01000000        /* user process initial xPSR value */
 
+
 /* ----- Functions ----- */
 
 void process_init(void);                /* initialize all procs in the system */
@@ -25,6 +26,7 @@ void null_process(void);                /* np */
 void enqueue(PCBQueue *, PCB *);        /* enqueue a pcb */
 PCB *dequeue(PCBQueue *);               /* dequeue a pcb */
 PCB *queue_remove(PCBQueue *, int pid); /* dequeue a pcb */
+void k_block_current_process(int);			/* */
 
 extern U32 *alloc_stack(U32 size_b);    /* allocate stack for a process */
 extern void __rte(void);                /* pop exception stack frame */

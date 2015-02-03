@@ -28,6 +28,7 @@ PCB *gp_current_process = NULL; /* always point to the current RUN process */
 PCB *gp_null_process = NULL;    /* always point to the null process */
 
 PCBQueue gp_priority_queues[NUM_PRIORITIES];
+PCBQueue gp_blocked_queues[1];
 
 /* process initialization table */
 PROC_INIT g_proc_table[NUM_PROCS];
@@ -152,16 +153,17 @@ int k_release_processor(void)
 	PCB *p_pcb_old = NULL;
 	
 	p_pcb_old = gp_current_process;
-	gp_current_process = scheduler();
-	
-	if ( gp_current_process == NULL  ) {
-		gp_current_process = gp_null_process;
-	}
 
   if ( p_pcb_old == NULL ) {
 		p_pcb_old = gp_null_process;
 	} else if ( p_pcb_old != gp_null_process) {
 		enqueue(&gp_priority_queues[p_pcb_old->m_priority], p_pcb_old);
+	}
+
+	gp_current_process = scheduler();
+	
+	if ( gp_current_process == NULL  ) {
+		gp_current_process = gp_null_process;
 	}
 
 	process_switch(p_pcb_old);

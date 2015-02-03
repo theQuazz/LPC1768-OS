@@ -115,7 +115,7 @@ void *k_request_memory_block(void) {
 	MEM_BLK *first = first_free_blk;
 
 #ifdef DEBUG_0 
-	printf("k_request_memory_block: entering...\n");
+	//printf("k_request_memory_block: entering...\r\n");
 #endif /* ! DEBUG_0 */
 
   if (!first) return NULL;
@@ -130,7 +130,7 @@ int k_release_memory_block(void *memory_block) {
 	MEM_BLK *first = memory_block;
 
 #ifdef DEBUG_0 
-	printf("k_release_memory_block: releasing block @ 0x%x\n", memory_block);
+	//printf("k_release_memory_block: releasing block @ 0x%x\r\n", memory_block);
 #endif /* ! DEBUG_0 */
 
   if (first->free) return RTX_ERR;
