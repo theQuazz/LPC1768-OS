@@ -71,3 +71,73 @@ void proc2(void)
 		i++;
 	}
 }
+
+/**
+ * @brief
+ * 4, 5. set partner process to current level - 1, partner does same,
+ * until they reach max, then decrement self till lowest, then repeat
+ */
+
+void expect_4_5(int a, int b) {
+  if (get_process_priority(4) != a ||
+      get_process_priority(5) != b) {
+    num_tests_failed++;
+    set_process_priority(4, LOWEST);
+    set_process_priority(5, LOWEST);
+    release_processor();
+  }
+
+  // should never be reached
+  while (1) {};
+}
+
+void proc4(void) {
+  num_tests++;
+
+  expect_4_5(LOW, LOW);
+
+  set_process_priority(5, HIGH);
+
+  release_processor();
+
+  expect_4_5(HIGH, HIGH);
+
+  set_process_priority(5, MEDIUM);
+
+  release_processor();
+
+  expect_4_5(MEDIUM, MEDIUM);
+
+  set_process_priority(5, LOW);
+
+  release_processor();
+
+  expect_4_5(LOW, LOW);
+
+  set_process_priority(4, LOWEST);
+  set_process_priority(5, LOWEST);
+
+  num_tests_passed++;
+
+  release_processor();
+}
+
+void proc5(void) {
+  expect_4_5(LOW, HIGH);
+
+  set_process_priority(4, HIGH);
+
+  release_processor();
+
+  expect_4_5(MEDIUM, HIGH);
+
+  set_process_priority(4, MEDIUM);
+
+  release_processor();
+
+  expect_4_5(LOW, MEDIUM);
+
+  set_process_priority(4, LOW);
+
+  release_processor();
+}
