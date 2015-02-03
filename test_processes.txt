@@ -1,0 +1,18 @@
+
+
+1. set pid 6 to next run level, release processor, pid 6 should run, after pid 6 runs, as in when it runs again, check pid 6's process priority is not highest
+
+
+
+2. sets its priority to highest, print message 5 times, then sets priority to lowest
+
+
+
+3. linked list program with malloc, create list of 100 els, then delete all
+
+
+4, 5. set partner process to current level - 1, partner does same, until they reach max, then decrement self till lowest, then repeat
+
+
+
+6. checkes if priority is highest (expected -- fail if not), then decrement, and continue to decrement until its lowest
