@@ -140,4 +140,33 @@ void proc5(void) {
   set_process_priority(4, LOW);
 
   release_processor();
+ }
+
+void proc3(void) {
+	int i;
+	int *first = request_memory_block();
+	int *elem = first;
+	
+	for (i = 0; i < 10; i++){
+		*elem = i;
+		elem++;
+	}
+	
+	num_tests++;
+	
+	if (RTX_OK == release_memory_block(first)){
+#ifdef DEBUG 0
+		printf("G019_test: test %d OK", num_tests);
+#endif
+		num_tests_passed++;
+	}
+	else {
+#ifdef DEBUG 0
+		printf("G019_test: test %d FAIL", num_tests);
+#endif
+		num_test_failed++;
+	}
+	
+	set_process_priority(3, LOWEST);
+	release_processor();
 }
