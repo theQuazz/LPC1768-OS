@@ -27,25 +27,24 @@ PCB **gp_pcbs;                  /* array of pcbs */
 PCB *gp_current_process = NULL; /* always point to the current RUN process */
 PCB *gp_null_process = NULL;    /* always point to the null process */
 
-PCBQueue gp_priority_queues[NUM_PRIORITIES];
-PCBQueue gp_blocked_queues[NUM_BLOCKED_QUEUES][NUM_PRIORITIES];
+PriorityQueue gp_priority_queues[NUM_PROC_STATE];
 
 /* process initialization table */
 PROC_INIT g_proc_table[NUM_PROCS];
 extern PROC_INIT g_test_procs[NUM_TEST_PROCS];
 
-void k_block_current_process(int blocked_queue) {
-	PCBQueue *q = &gp_blocked_queues[blocked_queue][gp_current_process->m_priority];
-	gp_current_process->m_state = BLK;
+void k_block_current_process(PROC_STATE_E state) {
+	PCBQueue *q = &gp_priority_queues[state].priorities[gp_current_process->m_priority];
+	gp_current_process->m_state = state;
 	enqueue(q, gp_current_process);
 	k_release_processor();
 }
 
-void k_unblock_from_queue(int blocked_queue) {
-	PCBQueue *q = gp_blocked_queues[blocked_queue];
+void k_unblock_from_queue(PROC_STATE_E blocked_queue) {
+	PriorityQueue *q = &gp_priority_queues[blocked_queue];
 	PCB *p = scheduler(q);
-	if (p){
-		enqueue(&gp_priority_queues[p->m_priority], p);
+	if (p) {
+		enqueue(&gp_priority_queues[RDY].priorities[p->m_priority], p);
 		p->m_state = RDY;
 	}
 }
@@ -91,11 +90,11 @@ void process_init()
 	}
 	
 	/* queue procs */
-	gp_null_process = gp_pcbs[0];
-
 	for ( i = 0; i < NUM_TEST_PROCS; i++ ) {
-		enqueue(&gp_priority_queues[gp_pcbs[i + 1]->m_priority], gp_pcbs[i + 1]);
+		enqueue(&gp_priority_queues[RDY].priorities[gp_pcbs[i + 1]->m_priority], gp_pcbs[i + 1]);
 	}
+
+	gp_current_process = gp_null_process = gp_pcbs[0];
 }
 
 /*@brief: scheduler, pick the pid of the next to run process
@@ -105,13 +104,13 @@ void process_init()
  *      No other effect on other global variables.
  */
 
-PCB *scheduler(PCBQueue *queues)
+PCB *scheduler(PriorityQueue *queue)
 {
 	int i;
 	PCB *p;
 
 	for (i = 0; i < NUM_PRIORITIES; i++) {
-		p = dequeue(&queues[i]);
+		p = dequeue(&(queue->priorities[i]));
 		if (p) {
 			return p;
 		}
@@ -136,7 +135,9 @@ int process_switch(PCB *p_pcb_old)
 
 	if (state == NEW) {
 		if (gp_current_process != p_pcb_old && p_pcb_old->m_state != NEW) {
-			p_pcb_old->m_state = RDY;
+			if (p_pcb_old->m_state == RUN) {
+				p_pcb_old->m_state = RDY;
+			}
 			p_pcb_old->mp_sp = (U32 *) __get_MSP();
 		}
 		gp_current_process->m_state = RUN;
@@ -147,8 +148,10 @@ int process_switch(PCB *p_pcb_old)
 	/* The following will only execute if the if block above is FALSE */
 
 	if (gp_current_process != p_pcb_old) {
-		if (state == RDY){ 		
-			p_pcb_old->m_state = RDY; 
+		if (state == RDY) {
+			if (p_pcb_old->m_state == RUN) {
+				p_pcb_old->m_state = RDY;
+			}
 			p_pcb_old->mp_sp = (U32 *) __get_MSP(); // save the old process's sp
 			gp_current_process->m_state = RUN;
 			__set_MSP((U32) gp_current_process->mp_sp); //switch to the new proc's stack    
@@ -170,13 +173,11 @@ int k_release_processor(void)
 	
 	p_pcb_old = gp_current_process;
 
-  if ( p_pcb_old == NULL ) {
-		p_pcb_old = gp_null_process;
-	} else if ( p_pcb_old != gp_null_process && p_pcb_old->m_state != BLK) {
-		enqueue(&gp_priority_queues[p_pcb_old->m_priority], p_pcb_old);
+  if ( p_pcb_old != gp_null_process ) {
+		enqueue(&gp_priority_queues[RDY].priorities[p_pcb_old->m_priority], p_pcb_old);
 	}
 
-	gp_current_process = scheduler(gp_priority_queues);
+	gp_current_process = scheduler(&gp_priority_queues[RDY]);
 	
 	if ( gp_current_process == NULL  ) {
 		gp_current_process = gp_null_process;
@@ -200,7 +201,7 @@ void null_process() {
  * @brief enqueue
  */
 void enqueue(PCBQueue *q, PCB *p) {
-	if (!q->last) q->last = p;
+  if (!q->last) q->last = p;
   if (q->first) q->first->prev = p;
   p->next = q->first;
   p->prev = NULL;
@@ -212,7 +213,7 @@ void enqueue(PCBQueue *q, PCB *p) {
  */
 PCB *dequeue(PCBQueue *q) {
   PCB *tmp = q->last;
-	if (!tmp) return NULL;
+  if (!tmp) return NULL;
   q->last = tmp->prev;
   if (q->last) q->last->next = NULL;
   return tmp;
@@ -240,7 +241,7 @@ PCB *queue_remove(PCBQueue *q, int pid) {
 			} else {
 				q->first = p->next;
 			}
-			
+
 			return p;
 		}
 
@@ -253,27 +254,48 @@ PCB *queue_remove(PCBQueue *q, int pid) {
 /**
  * @brief k_set_process_priority
  */
-void k_set_process_priority(int pid, int priority) {
+int k_set_process_priority(int pid, int priority) {
 	PCB *p = gp_pcbs[pid];
+	int state;
+
+  if (pid == 0 && priority == NULL_PROIRITY) {
+    return RTX_OK;
+  }
 	
-	if (!( 0 < pid && pid < NUM_PROCS )) {
+	if (!( 0 < pid && pid < NUM_PROCS && HIGH_PRIORITY <= priority && priority <= LOWEST_PRIORITY )) {
 #ifdef DEBUG_0
 		printf("somethin ain't right, trying to set_process_priority(%d, %d)\r\n", pid, priority);
 #endif
-		return;
+		return RTX_ERR;
+	}
+
+	state = p->m_state;
+	
+	// if state is the NEW state it is in the RDY queue
+	if (state == NEW) {
+		state = RDY;
 	}
 
 	if (gp_current_process->m_pid != pid) {
-		queue_remove(&gp_priority_queues[p->m_priority], pid);
-		enqueue(&gp_priority_queues[priority], p);
+		queue_remove(&gp_priority_queues[state].priorities[p->m_priority], pid);
+		enqueue(&gp_priority_queues[state].priorities[priority], p);
 	}
 
 	p->m_priority = priority;
+
+  return RTX_OK;
 }
 
 /**
  * @brief k_get_process_priority
  */
 int k_get_process_priority(int pid) {
+	if (!( 0 <= pid && pid < NUM_PROCS )) {
+#ifdef DEBUG_0
+		printf("somethin ain't right, trying to get_process_priority(%d)\r\n", pid);
+#endif
+		return RTX_ERR;
+	}
+
 	return gp_pcbs[pid]->m_priority;
 }

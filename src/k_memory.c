@@ -63,7 +63,7 @@ void memory_init(void)
 		gp_pcbs[i] = (PCB *)top_address;
 		top_address += sizeof(PCB);
 #ifdef DEBUG_0
-		printf("gp_pcbs[%d] = 0x%x \r\n", i, gp_pcbs[i]);
+		//printf("gp_pcbs[%d] = 0x%x \r\n", i, gp_pcbs[i]);
 #endif
 	}
 	
@@ -119,7 +119,7 @@ void *k_request_memory_block(void) {
 #endif /* ! DEBUG_0 */
 
   if (!first) {
-		k_block_current_process(BLOCKED_MEMORY);
+		k_block_current_process(BLK_MEM);
 		return NULL; // won't be reached
 	}
 
@@ -142,7 +142,7 @@ int k_release_memory_block(void *memory_block) {
   first->free    = true;
   first_free_blk = first;
 	
-	k_unblock_from_queue(BLOCKED_MEMORY);
+	k_unblock_from_queue(BLK_MEM);
 
   return RTX_OK;
 }

@@ -28,8 +28,25 @@
 typedef unsigned char U8;
 typedef unsigned int U32;
 
+/* proc prios */
+typedef enum {
+  HIGH_PRIORITY = 0,
+	MEDIUM_PRIORITY,
+	LOW_PRIORITY,
+	LOWEST_PRIORITY,
+	NULL_PROIRITY
+} PROC_PRIORITY_E;
+
 /* process states, note we only assume three states in this example */
-typedef enum {NEW = 0, RDY, RUN, BLK} PROC_STATE_E;  
+typedef enum {
+  NEW = 0,
+  RDY,
+  RUN,
+  BLK_MEM,
+  NUM_PROC_STATE
+} PROC_STATE_E;
+
+struct pcb_queue;
 
 /*
   PCB data structure definition.
@@ -38,11 +55,11 @@ typedef enum {NEW = 0, RDY, RUN, BLK} PROC_STATE_E;
 */
 typedef struct pcb 
 { 
-	struct pcb *next;  /* next pcb, not used in this example */  
-	struct pcb *prev;  /* next pcb, not used in this example */
-	int m_priority;         /* initial priority, not used in this example. */	
-	U32 *mp_sp;		/* stack pointer of the process */
-	U32 m_pid;		/* process id */
+	struct pcb *next;  			/* next pcb, not used in this example */  
+	struct pcb *prev;  			/* next pcb, not used in this example */
+	int m_priority;     		/* initial priority, not used in this example. */	
+	U32 *mp_sp;							/* stack pointer of the process */
+	U32 m_pid;							/* process id */
 	PROC_STATE_E m_state;   /* state of the process */      
 } PCB;
 
@@ -53,6 +70,13 @@ typedef struct pcb_queue {
   struct pcb *first;
   struct pcb *last;
 } PCBQueue;
+
+/*
+   PriorityQueue data structure
+*/
+typedef struct priority_queue {
+  PCBQueue priorities[NUM_PRIORITIES];
+} PriorityQueue;
 
 /* initialization table item */
 typedef struct proc_init
