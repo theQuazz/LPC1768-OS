@@ -256,10 +256,11 @@ PCB *queue_remove(PCBQueue *q, int pid) {
  */
 int k_set_process_priority(int pid, int priority) {
 	PCB *p = gp_pcbs[pid];
+	int state;
 
-        if (pid == 0 && priority == NULL_PROIRITY) {
-          return RTX_OK;
-        }
+  if (pid == 0 && priority == NULL_PROIRITY) {
+    return RTX_OK;
+  }
 	
 	if (!( 0 < pid && pid < NUM_PROCS && HIGH_PRIORITY <= priority && priority <= LOWEST_PRIORITY )) {
 #ifdef DEBUG_0
@@ -268,14 +269,21 @@ int k_set_process_priority(int pid, int priority) {
 		return RTX_ERR;
 	}
 
+	state = p->m_state;
+	
+	// if state is the NEW state it is in the RDY queue
+	if (state == NEW) {
+		state = RDY;
+	}
+
 	if (gp_current_process->m_pid != pid) {
-		queue_remove(&gp_priority_queues[p->m_state].priorities[p->m_priority], pid);
-		enqueue(&gp_priority_queues[p->m_state].priorities[priority], p);
+		queue_remove(&gp_priority_queues[state].priorities[p->m_priority], pid);
+		enqueue(&gp_priority_queues[state].priorities[priority], p);
 	}
 
 	p->m_priority = priority;
 
-        return RTX_OK;
+  return RTX_OK;
 }
 
 /**

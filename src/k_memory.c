@@ -63,7 +63,7 @@ void memory_init(void)
 		gp_pcbs[i] = (PCB *)top_address;
 		top_address += sizeof(PCB);
 #ifdef DEBUG_0
-		printf("gp_pcbs[%d] = 0x%x \r\n", i, gp_pcbs[i]);
+		//printf("gp_pcbs[%d] = 0x%x \r\n", i, gp_pcbs[i]);
 #endif
 	}
 	
