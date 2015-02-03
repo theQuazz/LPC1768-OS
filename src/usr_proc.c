@@ -41,6 +41,9 @@ void set_test_procs() {
 void proc1(void)
 {
 	int i;
+#ifdef DEBUG_0
+	printf("G019_test: START");
+#endif
 	
 	for ( i = 1; i < NUM_TEST_PROCS; i++) {
 		set_process_priority(i + 1, LOW);
@@ -48,7 +51,11 @@ void proc1(void)
 	
 	release_processor();
 	
-	printf("this should be last");
+#ifdef DEBUG_0
+	printf("G019_test: %d/%d tests OK", num_tests_passed, num_tests);
+	printf("G019_test: %d/%d tests FAIL", num_tests_failed, num_tests);
+	printf("G019_test: END");
+#endif
 	
 	while (true) {};
 }
@@ -60,8 +67,14 @@ void proc2(void)
 	set_process_priority(6, HIGH);
 	num_tests++;
 	if (prio_6 == HIGH) {
+#ifdef DEBUG_0
+		printf("G019_test: test %d OK", num_tests);
+#endif
 		num_tests_passed++;
 	} else {
+#ifdef DEBUG_0
+		printf("G019_test: test %d FAIL", num_tests);
+#endif
 		num_tests_failed++;
 	}
 	release_processor();
@@ -76,6 +89,9 @@ void proc6(void)
 	int prio = get_process_priority(6);
 	
 	if (prio != HIGH) {
+#ifdef DEBUG_0
+		printf("G019_test: test %d FAIL", num_tests);
+#endif
 		num_tests_failed++;
 		set_process_priority(6, LOWEST);
 	}
@@ -84,6 +100,9 @@ void proc6(void)
 	release_processor();
 	
 	if (prio != MEDIUM) {
+#ifdef DEBUG_0
+		printf("G019_test: test %d FAIL", num_tests);
+#endif
 		num_tests_failed++;
 		set_process_priority(6, LOWEST);
 	}
@@ -92,10 +111,16 @@ void proc6(void)
 	release_processor();
 	
 	if (prio != LOW) {
+#ifdef DEBUG_0
+		printf("G019_test: test %d FAIL", num_tests);
+#endif
 		num_tests_failed++;
 		set_process_priority(6, LOWEST);
 	}
 	
+#ifdef DEBUG_0
+	printf("G019_test: test %d OK", num_tests);
+#endif
 	num_tests_passed++;
 	set_process_priority(6, LOWEST);
 	release_processor();
