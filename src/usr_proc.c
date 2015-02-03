@@ -135,80 +135,6 @@ void proc6(void)
 	release_processor();
 }
 
-/**
- * @brief
- * 4, 5. set partner process to current level - 1, partner does same,
- * until they reach max, then decrement self till lowest, then repeat
- */
-
-void expect_4_5(int a, int b) {
-  if (get_process_priority(4) != a ||
-      get_process_priority(5) != b) {
-    num_tests_failed++;
-    set_process_priority(4, LOWEST);
-    set_process_priority(5, LOWEST);
-#ifdef DEBUG_0
-		printf("G019_test: test %d FAIL\r\n", 4);
-#endif
-    release_processor();
-  }
-}
-
-void proc4(void) {
-  num_tests++;
-
-  expect_4_5(LOW, LOW);
-
-  set_process_priority(5, HIGH);
-
-  release_processor();
-
-  expect_4_5(HIGH, HIGH);
-
-  set_process_priority(4, MEDIUM);
-
-  release_processor();
-
-  expect_4_5(MEDIUM, MEDIUM);
-
-  set_process_priority(4, LOW);
-
-  release_processor();
-
-  expect_4_5(LOW, LOW);
-
-  set_process_priority(4, LOWEST);
-  set_process_priority(5, LOWEST);
-
-  num_tests_passed++;
-
-#ifdef DEBUG_0
-		printf("G019_test: test %d OK\r\n", 4);
-#endif
-
-  release_processor();
-}
-
-void proc5(void) {
-  expect_4_5(LOW, HIGH);
-
-  set_process_priority(4, HIGH);
-
-  release_processor();
-
-  expect_4_5(MEDIUM, HIGH);
-
-  set_process_priority(5, MEDIUM);
-
-  release_processor();
-
-  expect_4_5(LOW, MEDIUM);
-
-  set_process_priority(5, LOW);
-
-  release_processor();
- }
-
 void proc3(void) {
 	int i;
 	int *first = request_memory_block();
@@ -236,4 +162,73 @@ void proc3(void) {
 	
 	set_process_priority(3, LOWEST);
 	release_processor();
+}
+
+/*
+ * test 4, requires 2 processes
+ */
+
+int maxed_out_mem = 0;
+
+struct llnode {
+  struct llnode *next;
+  int data;
+};
+
+int free_ll(struct llnode *l) {
+  int ret = 0;
+  if (!l) return;
+  ret = free_ll(l->next);
+
+  if (!release_memory_block(l)) {
+    return RTX_ERR;
+  } else {
+    return ret;
+  }
+}
+
+void proc4(void) {
+  int cache_size = 8;
+  void *cache[8];
+  int i;
+
+  for ( i = 0; i < cache_size; i++ ) {
+    cache[i] = request_memory_block();
+  }
+
+  set_process_priority(8, HIGH);
+  release_processor();
+
+  maxed_out_mem = 1;
+
+  for ( i = 0; i < cache_size; i++ ) {
+    release_memory_block(cache[i]);
+  }
+
+  set_process_prioirity(7, LOWEST);
+  release_processor();
+}
+
+void proc5(void) {
+  llnode *first = request_memory_block();
+  llnode *tmp;
+
+  do {
+    tmp = request_memory_block();
+    tmp->next = first;
+    first = tmp;
+  } while (!maxed_out_mem);
+
+#ifdef DEBUG_0
+  num_tests++;
+  if (free_ll(first) == RTX_ERR) {
+    printf("G019_test: test %d \r\n", 4);
+    num_tests_passed++;
+  } else {
+    printf("G019_test: test %d OK\r\n", 4);
+    num_tests_failed++;
+  }
+#endif
+
+  set_process_priority(8, LOWEST);
 }
