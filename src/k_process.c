@@ -201,10 +201,56 @@ PCB *dequeue(PCBQueue *q) {
 }
 
 /**
+ * @brief remove
+ */
+PCB *queue_remove(PCBQueue *q, int pid) {
+  PCB *p = q->first;
+
+	if (!p) return NULL;
+
+	do {
+		
+		if (p->m_pid == pid) {
+			if (p->next) {
+				p->next->prev = p->prev;
+			} else {
+				q->last = p->prev;
+			}
+
+			if (p->prev) {
+				p->prev->next = p->next;
+			} else {
+				q->first = p->next;
+			}
+			
+			return p;
+		}
+
+		p = p->next;
+	} while(p);
+	
+	return NULL;
+}
+
+/**
  * @brief k_set_process_priority
  */
 void k_set_process_priority(int pid, int priority) {
-	gp_pcbs[pid]->m_priority = priority;
+	PCB *p = gp_pcbs[pid];
+	
+	if (!( 0 < pid && pid < NUM_PROCS )) {
+#ifdef DEBUG_0
+		printf("somethin ain't right, trying to set_process_priority(%d, %d)\r\n", pid, priority);
+#endif
+		return;
+	}
+
+	if (gp_current_process->m_pid != pid) {
+		queue_remove(&gp_priority_queues[p->m_priority], pid);
+		enqueue(&gp_priority_queues[priority], p);
+	}
+
+	p->m_priority = priority;
 }
 
 /**
