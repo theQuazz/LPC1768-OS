@@ -33,18 +33,18 @@ PriorityQueue gp_priority_queues[NUM_PROC_STATE];
 PROC_INIT g_proc_table[NUM_PROCS];
 extern PROC_INIT g_test_procs[NUM_TEST_PROCS];
 
-void k_block_current_process(PROCE_STATE_E state) {
+void k_block_current_process(PROC_STATE_E state) {
 	PCBQueue *q = &gp_priority_queues[state].priorities[gp_current_process->m_priority];
 	gp_current_process->m_state = state;
 	enqueue(q, gp_current_process);
 	k_release_processor();
 }
 
-void k_unblock_from_queue(int blocked_queue) {
-	PriorityQueue *q = &gp_blocked_queues[blocked_queue];
+void k_unblock_from_queue(PROC_STATE_E blocked_queue) {
+	PriorityQueue *q = &gp_priority_queues[blocked_queue];
 	PCB *p = scheduler(q);
 	if (p) {
-		enqueue(&gp_priority_queues.priorities[p->m_priority], p);
+		enqueue(&gp_priority_queues[RDY].priorities[p->m_priority], p);
 		p->m_state = RDY;
 	}
 }
@@ -90,11 +90,11 @@ void process_init()
 	}
 	
 	/* queue procs */
-	gp_null_process = gp_pcbs[0];
-
 	for ( i = 0; i < NUM_TEST_PROCS; i++ ) {
-		enqueue(&gp_priority_queues.priorites[gp_pcbs[i + 1]->m_priority], gp_pcbs[i + 1]);
+		enqueue(&gp_priority_queues[RDY].priorities[gp_pcbs[i + 1]->m_priority], gp_pcbs[i + 1]);
 	}
+
+	gp_current_process = gp_null_process = gp_pcbs[0];
 }
 
 /*@brief: scheduler, pick the pid of the next to run process
@@ -104,13 +104,13 @@ void process_init()
  *      No other effect on other global variables.
  */
 
-PCB *scheduler(PriorityQueue *queues)
+PCB *scheduler(PriorityQueue *queue)
 {
 	int i;
 	PCB *p;
 
 	for (i = 0; i < NUM_PRIORITIES; i++) {
-		p = dequeue(&queues.priorities[i]);
+		p = dequeue(&(queue->priorities[i]));
 		if (p) {
 			return p;
 		}
@@ -135,7 +135,9 @@ int process_switch(PCB *p_pcb_old)
 
 	if (state == NEW) {
 		if (gp_current_process != p_pcb_old && p_pcb_old->m_state != NEW) {
-			p_pcb_old->m_state = RDY;
+			if (p_pcb_old->m_state == RUN) {
+				p_pcb_old->m_state = RDY;
+			}
 			p_pcb_old->mp_sp = (U32 *) __get_MSP();
 		}
 		gp_current_process->m_state = RUN;
@@ -146,8 +148,10 @@ int process_switch(PCB *p_pcb_old)
 	/* The following will only execute if the if block above is FALSE */
 
 	if (gp_current_process != p_pcb_old) {
-		if (state == RDY){ 		
-			p_pcb_old->m_state = RDY; 
+		if (state == RDY) {
+			if (p_pcb_old->m_state == RUN) {
+				p_pcb_old->m_state = RDY;
+			}
 			p_pcb_old->mp_sp = (U32 *) __get_MSP(); // save the old process's sp
 			gp_current_process->m_state = RUN;
 			__set_MSP((U32) gp_current_process->mp_sp); //switch to the new proc's stack    
@@ -169,13 +173,11 @@ int k_release_processor(void)
 	
 	p_pcb_old = gp_current_process;
 
-  if ( p_pcb_old == NULL ) {
-		p_pcb_old = gp_null_process;
-	} else if ( p_pcb_old != gp_null_process && p_pcb_old->m_state != BLK) {
-		enqueue(&gp_priority_queues.priorities[p_pcb_old->m_priority], p_pcb_old);
+  if ( p_pcb_old != gp_null_process ) {
+		enqueue(&gp_priority_queues[RDY].priorities[p_pcb_old->m_priority], p_pcb_old);
 	}
 
-	gp_current_process = scheduler(&gp_priority_queues);
+	gp_current_process = scheduler(&gp_priority_queues[RDY]);
 	
 	if ( gp_current_process == NULL  ) {
 		gp_current_process = gp_null_process;
@@ -255,11 +257,11 @@ PCB *queue_remove(PCBQueue *q, int pid) {
 int k_set_process_priority(int pid, int priority) {
 	PCB *p = gp_pcbs[pid];
 
-        if (pid == 0 && priority == 4) {
+        if (pid == 0 && priority == NULL_PROIRITY) {
           return RTX_OK;
         }
 	
-	if (!( 0 < pid && pid < NUM_PROCS && HIGH <= priority && priority <= LOWEST )) {
+	if (!( 0 < pid && pid < NUM_PROCS && HIGH_PRIORITY <= priority && priority <= LOWEST_PRIORITY )) {
 #ifdef DEBUG_0
 		printf("somethin ain't right, trying to set_process_priority(%d, %d)\r\n", pid, priority);
 #endif
@@ -282,7 +284,7 @@ int k_set_process_priority(int pid, int priority) {
 int k_get_process_priority(int pid) {
 	if (!( 0 <= pid && pid < NUM_PROCS )) {
 #ifdef DEBUG_0
-		printf("somethin ain't right, trying to get_process_priority(%d, %d)\r\n", pid, priority);
+		printf("somethin ain't right, trying to get_process_priority(%d)\r\n", pid);
 #endif
 		return RTX_ERR;
 	}
