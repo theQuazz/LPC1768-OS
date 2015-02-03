@@ -15,6 +15,8 @@
 
 #define NULL 0
 #define NUM_TEST_PROCS 2
+#define NUM_PROCS      NUM_TEST_PROCS + 1
+#define NUM_PRIORITIES 4
 
 #ifdef DEBUG_0
 #define USR_SZ_STACK 0x200         /* user proc stack size 512B   */
@@ -36,11 +38,21 @@ typedef enum {NEW = 0, RDY, RUN} PROC_STATE_E;
 */
 typedef struct pcb 
 { 
-	//struct pcb *mp_next;  /* next pcb, not used in this example */  
+	struct pcb *next;  /* next pcb, not used in this example */  
+	struct pcb *prev;  /* next pcb, not used in this example */
+	int m_priority;         /* initial priority, not used in this example. */	
 	U32 *mp_sp;		/* stack pointer of the process */
 	U32 m_pid;		/* process id */
 	PROC_STATE_E m_state;   /* state of the process */      
 } PCB;
+
+/*
+   PCBQueue data structure definition
+*/
+typedef struct pcb_queue {
+  struct pcb *first;
+  struct pcb *last;
+} PCBQueue;
 
 /* initialization table item */
 typedef struct proc_init

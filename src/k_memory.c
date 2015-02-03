@@ -57,9 +57,9 @@ void memory_init(void)
 
 	/* allocate memory for pcb pointers   */
 	gp_pcbs = (PCB **)top_address;
-	top_address += NUM_TEST_PROCS * sizeof(PCB *);
+	top_address += (NUM_TEST_PROCS + 1)* sizeof(PCB *);
   
-	for (i = 0; i < NUM_TEST_PROCS; i++) {
+	for (i = 0; i <= NUM_TEST_PROCS; i++) {
 		gp_pcbs[i] = (PCB *)top_address;
 		top_address += sizeof(PCB);
 #ifdef DEBUG_0

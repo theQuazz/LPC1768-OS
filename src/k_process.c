@@ -25,9 +25,12 @@
 /* ----- Global Variables ----- */
 PCB **gp_pcbs;                  /* array of pcbs */
 PCB *gp_current_process = NULL; /* always point to the current RUN process */
+PCB *gp_null_process = NULL;    /* always point to the null process */
+
+PCBQueue gp_priority_queues[NUM_PRIORITIES];
 
 /* process initialization table */
-PROC_INIT g_proc_table[NUM_TEST_PROCS];
+PROC_INIT g_proc_table[NUM_PROCS];
 extern PROC_INIT g_test_procs[NUM_TEST_PROCS];
 
 /**
@@ -41,16 +44,24 @@ void process_init()
   
         /* fill out the initialization table */
 	set_test_procs();
-	for ( i = 0; i < NUM_TEST_PROCS; i++ ) {
-		g_proc_table[i].m_pid = g_test_procs[i].m_pid;
-		g_proc_table[i].m_stack_size = g_test_procs[i].m_stack_size;
-		g_proc_table[i].mpf_start_pc = g_test_procs[i].mpf_start_pc;
+
+	g_proc_table[0].m_pid = 0;
+	g_proc_table[0].m_stack_size = 8;
+	g_proc_table[0].mpf_start_pc = null_process;
+	g_proc_table[0].m_priority = NUM_PRIORITIES;
+
+	for ( i = 1; i < NUM_PROCS; i++ ) {
+		g_proc_table[i].m_pid = g_test_procs[i - 1].m_pid;
+		g_proc_table[i].m_stack_size = g_test_procs[i - 1].m_stack_size;
+		g_proc_table[i].mpf_start_pc = g_test_procs[i - 1].mpf_start_pc;
+		g_proc_table[i].m_priority = g_test_procs[i - 1].m_priority;
 	}
   
 	/* initilize exception stack frame (i.e. initial context) for each process */
-	for ( i = 0; i < NUM_TEST_PROCS; i++ ) {
+	for ( i = 0; i < NUM_PROCS; i++ ) {
 		int j;
 		(gp_pcbs[i])->m_pid = (g_proc_table[i]).m_pid;
+		(gp_pcbs[i])->m_priority = (g_proc_table[i]).m_priority;
 		(gp_pcbs[i])->m_state = NEW;
 		
 		sp = alloc_stack((g_proc_table[i]).m_stack_size);
@@ -60,6 +71,13 @@ void process_init()
 			*(--sp) = 0x0;
 		}
 		(gp_pcbs[i])->mp_sp = sp;
+	}
+	
+	/* queue procs */
+	gp_null_process = gp_pcbs[0];
+
+	for ( i = 0; i < NUM_TEST_PROCS; i++ ) {
+		enqueue(&gp_priority_queues[gp_pcbs[i + 1]->m_priority], gp_pcbs[i + 1]);
 	}
 }
 
@@ -72,18 +90,17 @@ void process_init()
 
 PCB *scheduler(void)
 {
-	if (gp_current_process == NULL) {
-		gp_current_process = gp_pcbs[0]; 
-		return gp_pcbs[0];
-	}
+	int i;
+	PCB *p;
 
-	if ( gp_current_process == gp_pcbs[0] ) {
-		return gp_pcbs[1];
-	} else if ( gp_current_process == gp_pcbs[1] ) {
-		return gp_pcbs[0];
-	} else {
-		return NULL;
+	for (i = 0; i < NUM_PRIORITIES; i++) {
+		p = dequeue(&gp_priority_queues[i]);
+		if (p) {
+			return p;
+		}
 	}
+	
+	return NULL;
 }
 
 /*@brief: switch out old pcb (p_pcb_old), run the new pcb (gp_current_process)
@@ -138,12 +155,61 @@ int k_release_processor(void)
 	gp_current_process = scheduler();
 	
 	if ( gp_current_process == NULL  ) {
-		gp_current_process = p_pcb_old; // revert back to the old process
-		return RTX_ERR;
+		gp_current_process = gp_null_process;
 	}
-        if ( p_pcb_old == NULL ) {
-		p_pcb_old = gp_current_process;
+
+  if ( p_pcb_old == NULL ) {
+		p_pcb_old = gp_null_process;
+	} else if ( p_pcb_old != gp_null_process) {
+		enqueue(&gp_priority_queues[p_pcb_old->m_priority], p_pcb_old);
 	}
+
 	process_switch(p_pcb_old);
+
 	return RTX_OK;
+}
+
+/**
+ * @brief null_process()
+ */
+void null_process() {
+	while (1) {
+		k_release_processor();
+	}
+}
+
+/**
+ * @brief enqueue
+ */
+void enqueue(PCBQueue *q, PCB *p) {
+	if (!q->last) q->last = p;
+  if (q->first) q->first->prev = p;
+  p->next = q->first;
+  p->prev = NULL;
+  q->first = p;
+}
+
+/**
+ * @brief dequeue
+ */
+PCB *dequeue(PCBQueue *q) {
+  PCB *tmp = q->last;
+	if (!tmp) return NULL;
+  q->last = tmp->prev;
+  if (q->last) q->last->next = NULL;
+  return tmp;
+}
+
+/**
+ * @brief k_set_process_priority
+ */
+void k_set_process_priority(int pid, int priority) {
+	gp_pcbs[pid]->m_priority = priority;
+}
+
+/**
+ * @brief k_get_process_priority
+ */
+int k_get_process_priority(int pid) {
+	return gp_pcbs[pid]->m_priority;
 }
