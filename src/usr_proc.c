@@ -18,6 +18,8 @@ int num_tests = 0;
 int num_tests_passed = 0;
 int num_tests_failed = 0;
 
+int *mem_block;
+
 /* initialization table item */
 PROC_INIT g_test_procs[NUM_TEST_PROCS];
 
@@ -35,6 +37,8 @@ void set_test_procs() {
 	g_test_procs[3].mpf_start_pc = &proc4;
 	g_test_procs[4].mpf_start_pc = &proc5;
 	g_test_procs[5].mpf_start_pc = &proc6;
+	g_test_procs[6].mpf_start_pc = &proc7;
+	g_test_procs[7].mpf_start_pc = &proc8;
 }
 
 
@@ -236,4 +240,19 @@ void proc3(void) {
 	
 	set_process_priority(3, LOWEST);
 	release_processor();
+}
+
+void proc7(void){
+	mem_block = request_memory_block();
+	while(1){
+		request_memory_block();
+	}
+}
+
+void proc8(void){
+	release_memory_block(mem_block);
+	mem_block = request_memory_block();
+	
+	set_process_priority(8, LOWEST);
+  release_processor();
 }

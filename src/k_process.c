@@ -36,15 +36,18 @@ extern PROC_INIT g_test_procs[NUM_TEST_PROCS];
 
 void k_block_current_process(int blocked_queue) {
 	PCBQueue *q = &gp_blocked_queues[blocked_queue][gp_current_process->m_priority];
+	gp_current_process->m_state = BLK;
 	enqueue(q, gp_current_process);
-	gp_current_process = NULL;
 	k_release_processor();
 }
 
 void k_unblock_from_queue(int blocked_queue) {
 	PCBQueue *q = gp_blocked_queues[blocked_queue];
 	PCB *p = scheduler(q);
-	if (p) enqueue(&gp_priority_queues[p->m_priority], p);
+	if (p){
+		enqueue(&gp_priority_queues[p->m_priority], p);
+		p->m_state = RDY;
+	}
 }
 
 /**
@@ -169,7 +172,7 @@ int k_release_processor(void)
 
   if ( p_pcb_old == NULL ) {
 		p_pcb_old = gp_null_process;
-	} else if ( p_pcb_old != gp_null_process) {
+	} else if ( p_pcb_old != gp_null_process && p_pcb_old->m_state != BLK) {
 		enqueue(&gp_priority_queues[p_pcb_old->m_priority], p_pcb_old);
 	}
 
