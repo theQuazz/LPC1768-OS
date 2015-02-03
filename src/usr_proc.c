@@ -14,6 +14,10 @@
 #include "printf.h"
 #endif /* DEBUG_0 */
 
+int num_tests = 0;
+int num_tests_passed = 0;
+int num_tests_failed = 0;
+
 /* initialization table item */
 PROC_INIT g_test_procs[NUM_TEST_PROCS];
 
@@ -36,19 +40,65 @@ void set_test_procs() {
  */
 void proc1(void)
 {
-	int i = 0;
-	int ret_val = 10;
-	while ( 1) {
-		if ( i != 0 && i%5 == 0 ) {
-			uart0_put_string("\n\r");
-			ret_val = release_processor();
-#ifdef DEBUG_0
-			printf("proc1: ret_val=%d\n", ret_val);
-#endif /* DEBUG_0 */
-		}
-		uart0_put_char('A' + i%26);
-		i++;
+	int i;
+	
+	for ( i = 1; i < NUM_TEST_PROCS; i++) {
+		set_process_priority(i + 1, LOW);
 	}
+	
+	release_processor();
+	
+	printf("this should be last");
+	
+	while (true) {};
+}
+	
+void proc2(void)
+{
+	int prio_6 = get_process_priority(6);
+	
+	set_process_priority(6, HIGH);
+	num_tests++;
+	if (prio_6 == HIGH) {
+		num_tests_passed++;
+	} else {
+		num_tests_failed++;
+	}
+	release_processor();
+}
+
+void proc6(void)
+{
+	int prev_prio = LOW;
+	
+	num_tests++;
+	
+	int prio = get_process_priority(6);
+	
+	if (prio != HIGH) {
+		num_tests_failed++;
+		set_process_priority(6, LOWEST);
+	}
+	
+	set_process_priority(6, MEDIUM);
+	release_processor();
+	
+	if (prio != MEDIUM) {
+		num_tests_failed++;
+		set_process_priority(6, LOWEST);
+	}
+	
+	set_process_priority(6, LOW);
+	release_processor();
+	
+	if (prio != LOW) {
+		num_tests_failed++;
+		set_process_priority(6, LOWEST);
+	}
+	
+	num_tests_passed++;
+	set_process_priority(6, LOWEST);
+	release_processor();
 }
 
 /**
