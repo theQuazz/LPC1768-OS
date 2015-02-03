@@ -28,11 +28,24 @@ PCB *gp_current_process = NULL; /* always point to the current RUN process */
 PCB *gp_null_process = NULL;    /* always point to the null process */
 
 PCBQueue gp_priority_queues[NUM_PRIORITIES];
-PCBQueue gp_blocked_queues[1];
+PCBQueue gp_blocked_queues[NUM_BLOCKED_QUEUES][NUM_PRIORITIES];
 
 /* process initialization table */
 PROC_INIT g_proc_table[NUM_PROCS];
 extern PROC_INIT g_test_procs[NUM_TEST_PROCS];
+
+void k_block_current_process(int blocked_queue) {
+	PCBQueue *q = &gp_blocked_queues[blocked_queue][gp_current_process->m_priority];
+	enqueue(q, gp_current_process);
+	gp_current_process = NULL;
+	k_release_processor();
+}
+
+void k_unblock_from_queue(int blocked_queue) {
+	PCBQueue *q = gp_blocked_queues[blocked_queue];
+	PCB *p = scheduler(q);
+	if (p) enqueue(&gp_priority_queues[p->m_priority], p);
+}
 
 /**
  * @biref: initialize all processes in the system
@@ -89,13 +102,13 @@ void process_init()
  *      No other effect on other global variables.
  */
 
-PCB *scheduler(void)
+PCB *scheduler(PCBQueue *queues)
 {
 	int i;
 	PCB *p;
 
 	for (i = 0; i < NUM_PRIORITIES; i++) {
-		p = dequeue(&gp_priority_queues[i]);
+		p = dequeue(&queues[i]);
 		if (p) {
 			return p;
 		}
@@ -160,7 +173,7 @@ int k_release_processor(void)
 		enqueue(&gp_priority_queues[p_pcb_old->m_priority], p_pcb_old);
 	}
 
-	gp_current_process = scheduler();
+	gp_current_process = scheduler(gp_priority_queues);
 	
 	if ( gp_current_process == NULL  ) {
 		gp_current_process = gp_null_process;

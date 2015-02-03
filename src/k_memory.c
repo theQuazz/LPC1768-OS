@@ -118,7 +118,10 @@ void *k_request_memory_block(void) {
 	//printf("k_request_memory_block: entering...\r\n");
 #endif /* ! DEBUG_0 */
 
-  if (!first) return NULL;
+  if (!first) {
+		k_block_current_process(BLOCKED_MEMORY);
+		return NULL; // won't be reached
+	}
 
   first_free_blk = first->next;
   first->free    = false;
@@ -138,6 +141,8 @@ int k_release_memory_block(void *memory_block) {
   first->next    = first_free_blk;
   first->free    = true;
   first_free_blk = first;
+	
+	k_unblock_from_queue(BLOCKED_MEMORY);
 
   return RTX_OK;
 }

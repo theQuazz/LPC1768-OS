@@ -16,17 +16,22 @@
 
 #define INITIAL_xPSR 0x01000000        /* user process initial xPSR value */
 
+enum blocked_queues {
+	BLOCKED_MEMORY,
+	NUM_BLOCKED_QUEUES
+};
 
 /* ----- Functions ----- */
 
 void process_init(void);                /* initialize all procs in the system */
-PCB *scheduler(void);                   /* pick the pid of the next to run process */
-int k_release_process(void);            /* kernel release_process function */
+PCB *scheduler(PCBQueue *);             /* pick the pid of the next to run process */
+int k_release_processor(void);          /* kernel release_process function */
 void null_process(void);                /* np */
 void enqueue(PCBQueue *, PCB *);        /* enqueue a pcb */
 PCB *dequeue(PCBQueue *);               /* dequeue a pcb */
 PCB *queue_remove(PCBQueue *, int pid); /* dequeue a pcb */
 void k_block_current_process(int);			/* */
+void k_unblock_from_queue(int);					/* */
 
 extern U32 *alloc_stack(U32 size_b);    /* allocate stack for a process */
 extern void __rte(void);                /* pop exception stack frame */

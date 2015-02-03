@@ -9,7 +9,7 @@
 #define K_MEM_H_
 
 #include "k_rtx.h"
-//#include "k_process.h"
+#include "k_process.h"
 #include "stdbool.h"
 
 /* ----- Definitions ----- */
