@@ -68,10 +68,10 @@ void proc2(void)
 {
 	int prio_6;
 	
-	set_process_priority(6, HIGH);
+	set_process_priority(6, MEDIUM);
 	prio_6 = get_process_priority(6);
 	num_tests++;
-	if (prio_6 == HIGH) {
+	if (prio_6 == MEDIUM) {
 #ifdef DEBUG_0
 		printf("G019_test: test %d OK\r\n", 1);
 #endif
@@ -91,20 +91,9 @@ void proc6(void)
 {
 	int prio = get_process_priority(6);
 	
+	set_process_priority(2, HIGH);
+	
 	num_tests++;
-	
-	if (prio != HIGH) {
-#ifdef DEBUG_0
-		printf("G019_test: test %d FAIL\r\n", 3);
-#endif
-		num_tests_failed++;
-		set_process_priority(6, LOWEST);
-	}
-	
-	set_process_priority(6, MEDIUM);
-	release_processor();
-	
-	prio = get_process_priority(6);
 	
 	if (prio != MEDIUM) {
 #ifdef DEBUG_0
