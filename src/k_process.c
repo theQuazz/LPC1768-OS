@@ -247,10 +247,7 @@ PCB *dequeue(PCBQueue *q) {
 PCB *queue_remove(PCBQueue *q, int pid) {
   PCB *p = q->first;
 
-	if (!p) return NULL;
-
-	do {
-		
+	while (p) {
 		if (p->m_pid == pid) {
 			if (p->next) {
 				p->next->prev = p->prev;
@@ -268,7 +265,7 @@ PCB *queue_remove(PCBQueue *q, int pid) {
 		}
 
 		p = p->next;
-	} while(p);
+	}
 	
 	return NULL;
 }
@@ -304,6 +301,10 @@ int k_set_process_priority(int pid, int priority) {
 	}
 
 	p->m_priority = priority;
+	
+	if (gp_current_process->m_priority > priority) {
+		k_release_processor();
+	}
 
   return RTX_OK;
 }
