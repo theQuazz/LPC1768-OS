@@ -48,7 +48,7 @@ void k_unblock_from_queue(PROC_STATE_E blocked_queue) {
 	if (p) {
 		enqueue(&gp_priority_queues[RDY].priorities[p->m_priority], p);
 		p->m_state = RDY;
-		if (q) {
+		if (preempt) {
 			k_release_processor();
 		}
 	}
