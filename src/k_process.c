@@ -238,6 +238,7 @@ PCB *dequeue(PCBQueue *q) {
   if (!tmp) return NULL;
   q->last = tmp->prev;
   if (q->last) q->last->next = NULL;
+	tmp->next = tmp->prev = NULL;
   return tmp;
 }
 
@@ -302,7 +303,7 @@ int k_set_process_priority(int pid, int priority) {
 
 	p->m_priority = priority;
 	
-	if (gp_current_process->m_priority > priority) {
+	if (has_higher_priority_process(&gp_priority_queues[RDY])) {
 		k_release_processor();
 	}
 
