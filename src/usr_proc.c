@@ -169,6 +169,7 @@ void proc3(void) {
  */
 
 int maxed_out_mem = 0;
+int has_preempted = 1;
 
 struct llnode {
   struct llnode *next;
@@ -177,7 +178,7 @@ struct llnode {
 
 int free_ll(struct llnode *l) {
   int ret = 0;
-  if (!l) return;
+  if (!l) return ret;
   ret = free_ll(l->next);
 
   if (!release_memory_block(l)) {
@@ -196,22 +197,23 @@ void proc4(void) {
     cache[i] = request_memory_block();
   }
 
-  set_process_priority(8, HIGH);
+  set_process_priority(5, HIGH);
   release_processor();
 
   maxed_out_mem = 1;
 
   for ( i = 0; i < cache_size; i++ ) {
     release_memory_block(cache[i]);
+		has_preempted = 0;
   }
 
-  set_process_prioirity(7, LOWEST);
+  set_process_priority(4, LOWEST);
   release_processor();
 }
 
 void proc5(void) {
-  llnode *first = request_memory_block();
-  llnode *tmp;
+  struct llnode *first = request_memory_block();
+  struct llnode *tmp;
 
   do {
     tmp = request_memory_block();
@@ -221,14 +223,15 @@ void proc5(void) {
 
 #ifdef DEBUG_0
   num_tests++;
-  if (free_ll(first) == RTX_ERR) {
-    printf("G019_test: test %d \r\n", 4);
-    num_tests_passed++;
+  if (has_preempted != 1 || free_ll(first) == RTX_ERR) {
+    printf("G019_test: test %d FAIL\r\n", 4);
+    num_tests_failed++;
   } else {
     printf("G019_test: test %d OK\r\n", 4);
-    num_tests_failed++;
+    num_tests_passed++;
   }
 #endif
 
-  set_process_priority(8, LOWEST);
+  set_process_priority(5, LOWEST);
+	release_processor();
 }

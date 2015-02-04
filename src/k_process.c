@@ -173,7 +173,7 @@ int k_release_processor(void)
 	
 	p_pcb_old = gp_current_process;
 
-  if ( p_pcb_old != gp_null_process ) {
+  if ( p_pcb_old != gp_null_process && p_pcb_old->m_state == RUN ) {
 		enqueue(&gp_priority_queues[RDY].priorities[p_pcb_old->m_priority], p_pcb_old);
 	}
 
