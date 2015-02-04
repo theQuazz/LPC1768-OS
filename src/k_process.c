@@ -42,10 +42,15 @@ void k_block_current_process(PROC_STATE_E state) {
 
 void k_unblock_from_queue(PROC_STATE_E blocked_queue) {
 	PriorityQueue *q = &gp_priority_queues[blocked_queue];
+	int preempt = has_higher_priority_process(q);
 	PCB *p = scheduler(q);
+
 	if (p) {
 		enqueue(&gp_priority_queues[RDY].priorities[p->m_priority], p);
 		p->m_state = RDY;
+		if (q) {
+			k_release_processor();
+		}
 	}
 }
 
@@ -115,8 +120,25 @@ PCB *scheduler(PriorityQueue *queue)
 			return p;
 		}
 	}
-	
+
 	return NULL;
+}
+
+/*@brief: has_higher_priority_process(PriorityQueue *queue, PROC_PRIORITY_E priority)
+ * is there a process more with higher priority than mine
+ */
+
+int has_higher_priority_process(PriorityQueue *queue)
+{
+	int i;
+
+	for (i = 0; i < gp_current_process->m_priority; i++) {
+		if (queue->priorities[i].last) {
+			return 1;
+		}
+	}
+
+	return 0;
 }
 
 /*@brief: switch out old pcb (p_pcb_old), run the new pcb (gp_current_process)
