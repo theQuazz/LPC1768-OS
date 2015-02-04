@@ -49,11 +49,11 @@ void proc1(void)
 	printf("G019_test: START\r\n");
 #endif
 	
+	set_process_priority(1, HIGH);
 	for ( i = 1; i < NUM_TEST_PROCS; i++) {
 		set_process_priority(i + 1, LOW);
 	}
-	
-	release_processor();
+	set_process_priority(1, LOWEST);
 	
 #ifdef DEBUG_0
 	printf("G019_test: %d/%d tests OK\r\n", num_tests_passed, num_tests);
