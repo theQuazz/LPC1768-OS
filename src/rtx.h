@@ -15,6 +15,9 @@
 #define LOW       2
 #define LOWEST    3
 #define NUM_PRIOS 4
+/* Message types */
+#define DEFAULT 0
+#define KCD_REG 1
 
 /* ----- Types ----- */
 typedef unsigned int U32;
@@ -52,8 +55,16 @@ extern int k_get_process_priority(int);
 #define get_process_priority(pid) _get_process_priority((U32)k_get_process_priority, pid)
 extern int _get_process_priority(U32 p_func, int pid) __SVC_0;
 
-extern int k_set_process_priority(int);
+extern int k_set_process_priority(int, int);
 #define set_process_priority(pid, priority) _set_process_priority((U32)k_set_process_priority, pid, priority)
 extern int _set_process_priority(U32 p_func, int pid, int priority) __SVC_0;
+
+extern int k_send_message(int);
+#define send_message(pid, msg) _send_message((U32)k_send_message, pid, msg)
+extern int _send_message(U32 p_func, int pid, void *msg) __SVC_0;
+
+extern int k_recevice_message(int, void*);
+#define receive_message(pid) _send_message((U32)k_receive_message, pid)
+extern int _receive_message(U32 p_func, int pid) __SVC_0;
 
 #endif /* !RTX_H_ */
