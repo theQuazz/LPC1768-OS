@@ -43,6 +43,7 @@ typedef enum {
   RDY,
   RUN,
   BLK_MEM,
+	BLK_MSG,
   NUM_PROC_STATE
 } PROC_STATE_E;
 
@@ -60,7 +61,7 @@ typedef struct pcb
 	int m_priority;     		/* initial priority, not used in this example. */	
 	U32 *mp_sp;							/* stack pointer of the process */
 	U32 m_pid;							/* process id */
-	PROC_STATE_E m_state;   /* state of the process */      
+	PROC_STATE_E m_state;   /* state of the process */ 
 } PCB;
 
 /*

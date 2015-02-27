@@ -30,6 +30,7 @@ void k_block_current_process(PROC_STATE_E);				/* */
 void k_unblock_from_queue(PROC_STATE_E);					/* */
 int k_set_process_priority(int, int);							/* */		
 int k_get_process_priority(int);									/* */
+int k_get_current_pid();         									/* */
 
 extern U32 *alloc_stack(U32 size_b);    /* allocate stack for a process */
 extern void __rte(void);                /* pop exception stack frame */
