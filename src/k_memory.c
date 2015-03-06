@@ -49,8 +49,6 @@ void memory_init(void)
 {
 	U8 *top_address = (U8 *)&Image$$RW_IRAM1$$ZI$$Limit;
 	int i;
-	int num_blks;
-	MEM_BLK *mem;
   
 	/* 4 bytes padding */
 	top_address += 4;
@@ -63,9 +61,11 @@ void memory_init(void)
 		gp_pcbs[i] = (PCB *)top_address;
 		top_address += sizeof(PCB);
 #ifdef DEBUG_0
-		//printf("gp_pcbs[%d] = 0x%x \r\n", i, gp_pcbs[i]);
+		printf("0x%x \r\n", top_address);
 #endif
 	}
+	
+	first_free_blk = (MEM_BLK *) top_address;
 	
 	/* prepare for alloc_stack() to allocate memory for stacks */
 	
@@ -73,20 +73,24 @@ void memory_init(void)
 	if ((U32)gp_stack & 0x04) { /* 8 bytes alignment */
 		--gp_stack; 
 	}
-  
-	/* allocate memory for heap, not implemented yet*/
-	num_blks = ((U8 *)RAM_END_ADDR - top_address) / sizeof(MEM_BLK);
-  mem = (MEM_BLK*) top_address;
+}
 
-  first_free_blk = &mem[0];
+void heap_init(void) {
+	int i;
+	int num_blks;
+	MEM_BLK *mem;
+
+	/* allocate memory for heap, not implemented yet*/
+	num_blks = ((U8 *)gp_stack - (U8 *)first_free_blk) / sizeof(MEM_BLK) - 1;
+  mem = first_free_blk;
 
   for (i = 0; i < num_blks - 1; i++) {
     mem[i].next = &mem[i + 1];
-    mem[i].free = true;
+    mem[i].free = 1;
   }
 
   mem[num_blks - 1].next = NULL;
-  mem[num_blks - 1].free = true;
+  mem[num_blks - 1].free = 1;
 }
 
 /**
@@ -120,12 +124,13 @@ void *k_request_memory_block(void) {
 #endif /* ! DEBUG_0 */
 
   if (!first) {
+		__enable_irq();
 		k_block_current_process(BLK_MEM);
 		return NULL; // won't be reached
 	}
 
-  first_free_blk = first->next;
-  first->free    = false;
+  first_free_blk->free = 0;
+  first_free_blk       = first_free_blk->next;
 
 	__enable_irq();
   return first;
@@ -141,7 +146,7 @@ int k_release_memory_block(void *memory_block) {
   if (first->free) return RTX_ERR;
 
   first->next    = first_free_blk;
-  first->free    = true;
+  first->free    = 1;
   first_free_blk = first;
 	
 	k_unblock_from_queue(BLK_MEM);

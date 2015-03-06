@@ -10,7 +10,6 @@
 
 #include "k_rtx.h"
 #include "k_process.h"
-#include "stdbool.h"
 
 /* ----- Definitions ----- */
 #define RAM_END_ADDR 0x10008000
@@ -25,11 +24,12 @@ extern PROC_INIT g_proc_table[NUM_TEST_PROCS];
 typedef struct mem_blk {
   U8 blk[BLK_SIZE];
   struct mem_blk *next;
-  bool free;
+  unsigned char free;
 } MEM_BLK;
 
 /* ----- Functions ------ */
 void memory_init(void);
+void heap_init(void);
 U32 *alloc_stack(U32 size_b);
 void *k_request_memory_block(void);
 int k_release_memory_block(void *);

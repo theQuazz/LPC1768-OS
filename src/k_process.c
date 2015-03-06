@@ -228,14 +228,7 @@ int k_release_processor(void)
 }
 
 void k_switch_timer_i_process(void) {
-		PCB * p_pcb_old = gp_current_process;
-
-		if (p_pcb_old->m_state == RUN) {
-			p_pcb_old->m_state = RDY;
-		}
-		p_pcb_old->mp_sp = (U32 *) __get_MSP();
-		
-		
+		timer_i_process();
 }
 
 /**
