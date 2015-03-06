@@ -56,15 +56,15 @@ void k_unblock_from_queue(PROC_STATE_E blocked_queue) {
 
 void k_conditional_unblock_pid(int pid, PROC_STATE_E expected) {
 	PCB *p = gp_pcbs[pid];
-	PCBQueue q = gp_priority_queues[p->m_state][p->m_priority];
+	PCBQueue *q = &gp_priority_queues[p->m_state].priorities[p->m_priority];
 	
 	if (p->m_state != expected) {
 		return;
 	}
 	
-	queue_remove(&q, pid);
+	queue_remove(q, pid);
 	p->m_state = RDY;
-	enqueue(&gp_priority_queues[p->m_state][p->m_priority], p);
+	enqueue(&gp_priority_queues[p->m_state].priorities[p->m_priority], p);
 
 	if (p->m_priority > gp_current_process->m_priority) {
 		k_release_processor();
