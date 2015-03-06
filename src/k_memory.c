@@ -114,6 +114,7 @@ U32 *alloc_stack(U32 size_b)
 void *k_request_memory_block(void) {
 	MEM_BLK *first = first_free_blk;
 
+	__disable_irq();
 #ifdef DEBUG_0 
 	//printf("k_request_memory_block: entering...\r\n");
 #endif /* ! DEBUG_0 */
@@ -126,6 +127,7 @@ void *k_request_memory_block(void) {
   first_free_blk = first->next;
   first->free    = false;
 
+	__enable_irq();
   return first;
 }
 

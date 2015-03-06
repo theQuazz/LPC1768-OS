@@ -88,7 +88,7 @@ void process_init()
 	g_proc_table[0].mpf_start_pc = null_process;
 	g_proc_table[0].m_priority = NUM_PRIORITIES;
 
-	for ( i = 1; i < NUM_PROCS; i++ ) {
+	for ( i = 1; i <= NUM_TEST_PROCS; i++ ) {
 		g_proc_table[i].m_pid = g_test_procs[i - 1].m_pid;
 		g_proc_table[i].m_stack_size = g_test_procs[i - 1].m_stack_size;
 		g_proc_table[i].mpf_start_pc = g_test_procs[i - 1].mpf_start_pc;
@@ -96,7 +96,7 @@ void process_init()
 	}
   
 	/* initilize exception stack frame (i.e. initial context) for each process */
-	for ( i = 0; i < NUM_PROCS; i++ ) {
+	for ( i = 0; i <= NUM_TEST_PROCS; i++ ) {
 		int j;
 		(gp_pcbs[i])->m_pid = (g_proc_table[i]).m_pid;
 		(gp_pcbs[i])->m_priority = (g_proc_table[i]).m_priority;
@@ -225,6 +225,17 @@ int k_release_processor(void)
 	process_switch(p_pcb_old);
 
 	return RTX_OK;
+}
+
+void k_switch_timer_i_process(void) {
+		PCB * p_pcb_old = gp_current_process;
+
+		if (p_pcb_old->m_state == RUN) {
+			p_pcb_old->m_state = RDY;
+		}
+		p_pcb_old->mp_sp = (U32 *) __get_MSP();
+		
+		
 }
 
 /**

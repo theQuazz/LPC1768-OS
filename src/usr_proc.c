@@ -35,6 +35,13 @@ void set_test_procs() {
 	g_test_procs[3].mpf_start_pc = &proc4;
 	g_test_procs[4].mpf_start_pc = &proc5;
 	g_test_procs[5].mpf_start_pc = &proc6;
+	g_test_procs[6].mpf_start_pc = &proc_A;
+	g_test_procs[7].mpf_start_pc = &proc_B;
+	g_test_procs[8].mpf_start_pc = &proc_C;
+	g_test_procs[9].mpf_start_pc = &set_process_priority_process;
+	g_test_procs[10].mpf_start_pc = &wall_clock_display;
+	g_test_procs[11].mpf_start_pc = &proc_KCD;
+	g_test_procs[12].mpf_start_pc = &proc_CRT;
 }
 
 
@@ -50,7 +57,7 @@ void proc1(void)
 #endif
 	
 	set_process_priority(1, HIGH);
-	for ( i = 1; i < NUM_TEST_PROCS; i++) {
+	for ( i = 1; i < 6; i++) {
 		set_process_priority(i + 1, LOW);
 	}
 	set_process_priority(1, LOWEST);
@@ -224,3 +231,12 @@ void proc5(void) {
   set_process_priority(5, LOWEST);
 	release_processor();
 }
+
+
+void proc_A(void) { while (1) release_processor(); }
+void proc_B(void) { while (1) release_processor(); }
+void proc_C(void) { while (1) release_processor(); }
+void set_process_priority_process(void) { while (1) release_processor(); }
+void wall_clock_display(void) { while (1) release_processor(); }
+void proc_KCD(void) { while (1) release_processor(); }
+void proc_CRT(void) { while (1) release_processor(); }
