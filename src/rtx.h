@@ -59,12 +59,12 @@ extern int k_set_process_priority(int, int);
 #define set_process_priority(pid, priority) _set_process_priority((U32)k_set_process_priority, pid, priority)
 extern int _set_process_priority(U32 p_func, int pid, int priority) __SVC_0;
 
-extern int k_send_message(int);
+extern int k_send_message(int, void*);
 #define send_message(pid, msg) _send_message((U32)k_send_message, pid, msg)
 extern int _send_message(U32 p_func, int pid, void *msg) __SVC_0;
 
-extern int k_recevice_message(int, void*);
-#define receive_message(pid) _send_message((U32)k_receive_message, pid)
+extern int k_receive_message(int);
+#define receive_message(pid) _receive_message((U32)k_receive_message, pid)
 extern int _receive_message(U32 p_func, int pid) __SVC_0;
 
 #endif /* !RTX_H_ */

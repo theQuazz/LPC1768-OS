@@ -68,7 +68,7 @@ void proc1(void)
 	printf("G019_test: END\r\n");
 #endif
 	
-	while (1) {};
+	receive_message(0);;
 }
 	
 void proc2(void)
@@ -91,7 +91,7 @@ void proc2(void)
 	}
 	
 	set_process_priority(2, LOWEST);
-	while (1) {};
+	receive_message(0);;
 }
 
 void proc6(void)
@@ -127,7 +127,7 @@ void proc6(void)
 	num_tests_passed++;
 
 	set_process_priority(6, LOWEST);
-	while (1) {};
+	receive_message(0);;
 }
 
 void proc3(void) {
@@ -156,7 +156,7 @@ void proc3(void) {
 	}
 	
 	set_process_priority(3, LOWEST);
-	while (1) {}
+	receive_message(0);
 }
 
 /*
@@ -175,8 +175,6 @@ int free_ll(struct llnode *l) {
 	struct llnode *tmp;
 	while (l) {
 		tmp = l->next;
-		
-		printf("freeing %x, %x\r\n", l, l->next);
 		k_release_memory_block(l);
 		l = tmp;
 	}
@@ -203,7 +201,7 @@ void proc4(void) {
   }
 
   set_process_priority(4, LOWEST);
-	while (1) {};
+	receive_message(0);;
 }
 
 void proc5(void) {
@@ -215,7 +213,6 @@ void proc5(void) {
   do {
     tmp = request_memory_block();
     tmp->next = first;
-		printf("requested %x -> %x\r\n", tmp, tmp->next);
     first = tmp;
   } while (!maxed_out_mem);
 	
@@ -234,14 +231,14 @@ void proc5(void) {
 #endif
 
   set_process_priority(5, LOWEST);
-	while (1) {};
+	receive_message(0);;
 }
 
 
-void proc_A(void) { while (1) {} }
-void proc_B(void) { while (1) {} }
-void proc_C(void) { while (1) {} }
-void set_process_priority_process(void) { while (1) {} }
-void wall_clock_display(void) { while (1) {} }
-void proc_KCD(void) { while (1) {} }
-void proc_CRT(void) { while (1) {} }
+void proc_A(void) { receive_message(0); }
+void proc_B(void) { receive_message(0); }
+void proc_C(void) { receive_message(0); }
+void set_process_priority_process(void) { receive_message(0); }
+void wall_clock_display(void) { receive_message(0); }
+void proc_KCD(void) { receive_message(0); }
+void proc_CRT(void) { receive_message(0); }
