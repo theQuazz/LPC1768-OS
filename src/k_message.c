@@ -10,11 +10,11 @@ void msg_enqueue(MessageQueue *q, MSG *p) {
   q->first = p;
 }
 
-MSG *msg_queue_remove(MessageQueue *q, int pid) {
+MSG *msg_queue_remove(MessageQueue *q, int (*pred)(MSG*, void*), void *data) {
   MSG *p = q->first;
 
 	while (p) {
-		if (p->sender_pid == pid) {
+		if (pred(p, data)) {
 			if (p->next) {
 				p->next->prev = p->prev;
 			} else {
@@ -36,6 +36,15 @@ MSG *msg_queue_remove(MessageQueue *q, int pid) {
 	return NULL;
 }
 
+int message_pid_predicate(MSG *msg, void *vpid) {
+	int *pid = vpid;
+	return msg->sender_pid == *pid;
+}
+
+int message_always_true_predicate(MSG *msg, void *v) {
+	return 1;
+}
+
 int k_send_message(int pid, void *envelope){
 	MSG *m = envelope;
 	m->sender_pid = k_get_current_pid();
@@ -52,7 +61,7 @@ void *k_receive_message(int pid){
 	int curr = k_get_current_pid();
 	MSG *msg;
 	
-	while ((msg = msg_queue_remove(&process_message_queues[curr], pid)) == NULL) {
+	while ((msg = msg_queue_remove(&process_message_queues[curr], message_pid_predicate, &pid)) == NULL) {
 		k_block_current_process(BLK_MSG);
 	}
 	return msg->usr_msg;
@@ -61,5 +70,11 @@ void *k_receive_message(int pid){
 void *k_recieve_message_noblock(int pid){
 	int curr = k_get_current_pid();
 	
-	return msg_queue_remove(&process_message_queues[curr], pid);
+	return msg_queue_remove(&process_message_queues[curr], message_pid_predicate, &pid);
+}
+
+void *k_recieve_first_message_nonblock(int pid){
+	int curr = k_get_current_pid();
+	
+	return msg_queue_remove(&process_message_queues[curr], message_always_true_predicate, NULL);
 }

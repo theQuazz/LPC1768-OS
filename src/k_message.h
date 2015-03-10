@@ -26,4 +26,4 @@ int k_send_message(int, void*);
 void *k_receive_message(int);
 void *k_recieve_message_noblock(int);
 void msg_enqueue(MessageQueue *q, MSG *m);
-MSG *msg_queue_remove(MessageQueue *q, int pid);
+MSG *msg_queue_remove(MessageQueue *q, int (*pred)(MSG*, void*), void *data);

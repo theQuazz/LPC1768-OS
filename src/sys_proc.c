@@ -1,16 +1,18 @@
 #include "sys_proc.h"
 #include "k_rtx.h"
 #include "k_process.h"
+#include "k_message.h"
+
+int message_timed_out_predicate(MSG *msg, void *v) {
+	return 1; /*msg->timeout >= gp_current_time;*/
+}
 
 void timer_i_process ( ) {
+	MSG *msg;
+
 	__disable_irq();
-	while ( /*pending messages to i-process*/ 0 ) {
-		//insert envelope into the timeout queue ;
-	}
-	while ( /*first message in queue timeout expired*/ 0 ) {
-		//msg_t * env = dequeue ( timeout_queue ) ;
-		//int target_pid = env->destination_pid ;
-		// forward msg to destination
+
+	while ( /*msg = message_queue_remove(&message_queues..., message_timed_out_predicate, NULL)*/ 0 ) {
 		__enable_irq();
 		//send_message ( target_pid , env ) ;
 	}
