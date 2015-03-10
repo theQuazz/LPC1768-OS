@@ -92,12 +92,12 @@ void process_init()
 	g_proc_table[TIMER_I_PROCESS_PID].m_pid = TIMER_I_PROCESS_PID;
 	g_proc_table[TIMER_I_PROCESS_PID].m_stack_size = 8;
 	g_proc_table[TIMER_I_PROCESS_PID].mpf_start_pc = NULL;
-	g_proc_table[TIMER_I_PROCESS_PID].m_priority = HIGHEST; // never preempt
+	g_proc_table[TIMER_I_PROCESS_PID].m_priority = HIGH_PRIORITY; // never preempt
 
 	g_proc_table[UART_I_PROCESS_PID].m_pid = UART_I_PROCESS_PID;
 	g_proc_table[UART_I_PROCESS_PID].m_stack_size = 8;
 	g_proc_table[UART_I_PROCESS_PID].mpf_start_pc = NULL;
-	g_proc_table[UART_I_PROCESS_PID].m_priority = HIGHEST; // never preempt
+	g_proc_table[UART_I_PROCESS_PID].m_priority = HIGH_PRIORITY; // never preempt
 
 	// usr procs
 	for ( i = 1; i <= NUM_TEST_PROCS; i++ ) {
@@ -245,7 +245,7 @@ int k_release_processor(void)
 
 void k_switch_timer_i_process(void) {
 	PCB *p_pcb_old = gp_current_process;
-	gp_current_process = &gp_pcbs[TIMER_I_PROCESS_PID];
+	gp_current_process = gp_pcbs[TIMER_I_PROCESS_PID];
 	timer_i_process();
 	gp_current_process = p_pcb_old;
 	k_release_processor();
@@ -253,7 +253,7 @@ void k_switch_timer_i_process(void) {
 
 void k_switch_uart_i_process(void) {
 	PCB *p_pcb_old = gp_current_process;
-	gp_current_process = &gp_pcbs[UART_I_PROCESS_PID];
+	gp_current_process = gp_pcbs[UART_I_PROCESS_PID];
 	uart_i_process();
 	gp_current_process = p_pcb_old;
 	k_release_processor();

@@ -24,8 +24,8 @@ typedef struct message_queue {
 
 int k_send_message(int, void*);
 void *k_receive_message(int);
-void *k_receive_first_message();
-void *k_recieve_message_noblock(int);
-void *k_recieve_first_message_nonblock();
+void *k_receive_first_message(void);
+void *k_receive_message_noblock(int);
+void *k_receive_first_message_nonblock(void);
 void msg_enqueue(MessageQueue *q, MSG *m);
 MSG *msg_queue_remove(MessageQueue *q, int (*pred)(MSG*, void*), void *data);

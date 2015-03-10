@@ -18,6 +18,8 @@
 #define NUM_SYS_PROCS  2
 #define NUM_PROCS      NUM_TEST_PROCS + NUM_SYS_PROCS + 1
 #define NUM_PRIORITIES 4
+#define TIMER_I_PROCESS_PID 14
+#define UART_I_PROCESS_PID 15
 
 #ifdef DEBUG_0
 #define USR_SZ_STACK 0x200         /* user proc stack size 512B   */

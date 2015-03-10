@@ -159,5 +159,4 @@ __asm void UART0_IRQHandler(void)
 	PUSH{r4-r11, lr}
 	BL k_switch_uart_i_process
 	POP{r4-r11, pc}
-} 
 }

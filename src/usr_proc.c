@@ -189,16 +189,23 @@ void wall_clock_display(void) { receive_message(0); }
 // this func needs work!
 void proc_KCD(void) {
 	KCD_MSG *msg;
-	while (msg = recieve_message(UART_I_PROCESS_PID)) {
+	char *body;
+	while (msg = receive_message(UART_I_PROCESS_PID)) {
 		// decode msg
+		body = msg->body;
+		
+		if (body[0] == '%'){
+		}
+		else{
+		}
 	}
 }
 
 // this func needs work!
 void proc_CRT(void) {
 	KCD_MSG *msg;
-	while (msg = recieve_first_message()) {
+	while (msg = receive_first_message()) {
 		// TODO: should we process longer strings then break them down into chars to send to the uart_i_proc?
-		send_message(msg, UART_I_PROCESS_PID);
+		send_message(UART_I_PROCESS_PID, msg);
 	}
 }

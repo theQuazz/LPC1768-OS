@@ -19,6 +19,9 @@
 #define DEFAULT 0
 #define KCD_REG 1
 
+#define TIMER_I_PROCESS_PID 14
+#define UART_I_PROCESS_PID 15
+
 /* ----- Types ----- */
 typedef unsigned int U32;
 
@@ -72,12 +75,12 @@ extern void *k_receive_message(int);
 #define receive_message(pid) _receive_message((U32)k_receive_message, pid)
 extern void *_receive_message(U32 p_func, int pid) __SVC_0;
 
-extern void *k_recieve_first_message_nonblock();
-#define recieve_first_message_nonblock() _recieve_first_message_nonblock((U32)k_recieve_first_message_nonblock)
-extern void *_recieve_first_message_nonblock(U32 p_func) __SVC_0;
+extern void *k_receive_first_message_nonblock(void);
+#define receive_first_message_nonblock() _receive_first_message_nonblock((U32)k_recieve_first_message_nonblock)
+extern void *_receive_first_message_nonblock(U32 p_func) __SVC_0;
 
-extern void *k_recieve_first_message();
-#define recieve_first_message() _recieve_first_message((U32)k_recieve_first_message)
-extern void *_recieve_first_message(U32 p_func) __SVC_0;
+extern void *k_receive_first_message(void);
+#define receive_first_message() _receive_first_message((U32)k_receive_first_message)
+extern void *_receive_first_message(U32 p_func) __SVC_0;
 
 #endif /* !RTX_H_ */

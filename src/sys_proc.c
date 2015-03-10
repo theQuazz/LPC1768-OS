@@ -3,6 +3,7 @@
 #include "k_process.h"
 #include "k_message.h"
 #include "printf.h"
+#include "uart.h"
 #include <LPC17xx.h>
 
 int message_timed_out_predicate(MSG *msg, void *v) {
