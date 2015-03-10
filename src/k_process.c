@@ -83,11 +83,23 @@ void process_init()
         /* fill out the initialization table */
 	set_test_procs();
 
+	// sys procs
 	g_proc_table[0].m_pid = 0;
 	g_proc_table[0].m_stack_size = 8;
 	g_proc_table[0].mpf_start_pc = null_process;
 	g_proc_table[0].m_priority = NUM_PRIORITIES;
 
+	g_proc_table[TIMER_I_PROCESS_PID].m_pid = TIMER_I_PROCESS_PID;
+	g_proc_table[TIMER_I_PROCESS_PID].m_stack_size = 8;
+	g_proc_table[TIMER_I_PROCESS_PID].mpf_start_pc = NULL;
+	g_proc_table[TIMER_I_PROCESS_PID].m_priority = LOWEST;
+
+	g_proc_table[UART_I_PROCESS_PID].m_pid = UART_I_PROCESS_PID;
+	g_proc_table[UART_I_PROCESS_PID].m_stack_size = 8;
+	g_proc_table[UART_I_PROCESS_PID].mpf_start_pc = NULL;
+	g_proc_table[UART_I_PROCESS_PID].m_priority = LOWEST;
+
+	// usr procs
 	for ( i = 1; i <= NUM_TEST_PROCS; i++ ) {
 		g_proc_table[i].m_pid = g_test_procs[i - 1].m_pid;
 		g_proc_table[i].m_stack_size = g_test_procs[i - 1].m_stack_size;
@@ -96,7 +108,7 @@ void process_init()
 	}
   
 	/* initilize exception stack frame (i.e. initial context) for each process */
-	for ( i = 0; i <= NUM_TEST_PROCS; i++ ) {
+	for ( i = 0; i < NUM_PROCS; i++ ) {
 		int j;
 		(gp_pcbs[i])->m_pid = (g_proc_table[i]).m_pid;
 		(gp_pcbs[i])->m_priority = (g_proc_table[i]).m_priority;
@@ -111,7 +123,7 @@ void process_init()
 		(gp_pcbs[i])->mp_sp = sp;
 	}
 	
-	/* queue procs */
+	/* queue usr procs */
 	for ( i = 0; i < NUM_TEST_PROCS; i++ ) {
 		enqueue(&gp_priority_queues[RDY].priorities[gp_pcbs[i + 1]->m_priority], gp_pcbs[i + 1]);
 	}
@@ -232,7 +244,12 @@ int k_release_processor(void)
 }
 
 void k_switch_timer_i_process(void) {
-		timer_i_process();
+	PCB *p_pcb_old = gp_current_process;
+	__disable__irq();
+	gp_current_process = &gp_pcbs[TIMER_I_PROCESS_PID];
+	timer_i_process();
+	gp_current_process = p_pcb_old;
+	k_release_processor();
 }
 
 /**
