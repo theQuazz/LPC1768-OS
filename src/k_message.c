@@ -48,18 +48,18 @@ int k_send_message(int pid, void *envelope){
 	return 0;
 }
 
-void *k_receive_message(int *pid){
+void *k_receive_message(int pid){
 	int curr = k_get_current_pid();
 	MSG *msg;
 	
-	while ((msg = msg_queue_remove(&process_message_queues[curr], *pid)) == NULL) {
+	while ((msg = msg_queue_remove(&process_message_queues[curr], pid)) == NULL) {
 		k_block_current_process(BLK_MSG);
 	}
 	return msg->usr_msg;
 }
 
-void *k_recieve_message_noblock(int *pid){
+void *k_recieve_message_noblock(int pid){
 	int curr = k_get_current_pid();
 	
-	return msg_queue_remove(&process_message_queues[curr], *pid);
+	return msg_queue_remove(&process_message_queues[curr], pid);
 }

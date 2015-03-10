@@ -73,89 +73,37 @@ void proc1(void)
 	
 void proc2(void)
 {
-	int prio_6;
-	
-	set_process_priority(6, MEDIUM);
-	prio_6 = get_process_priority(6);
-	num_tests++;
-	if (prio_6 == MEDIUM) {
-#ifdef DEBUG_0
-		printf("G019_test: test %d OK\r\n", 1);
-#endif
-		num_tests_passed++;
-	} else {
-#ifdef DEBUG_0
-		printf("G019_test: test %d FAIL\r\n", 1);
-#endif
-		num_tests_failed++;
-	}
-	
-	set_process_priority(2, LOWEST);
-	receive_message(0);;
+	receive_message(0);
 }
+
+struct msg_t {
+	char body[1];
+};
 
 void proc6(void)
 {
-	int prio = get_process_priority(6);
+	struct msg_t *m = request_memory_block();
+	m->body[0] = 'a';
 	
-	set_process_priority(2, HIGH);
-	
-	num_tests++;
-	
-	if (prio != MEDIUM) {
-#ifdef DEBUG_0
-		printf("G019_test: test %d FAIL\r\n", 3);
-#endif
-		num_tests_failed++;
-		set_process_priority(6, LOWEST);
-	}
-	
-	set_process_priority(6, LOW);
-	
-	prio = get_process_priority(6);
-	if (prio != LOW) {
-#ifdef DEBUG_0
-		printf("G019_test: test %d FAIL\r\n", 3);
-#endif
-		num_tests_failed++;
-		set_process_priority(6, LOWEST);
-	}
-	
-#ifdef DEBUG_0
-	printf("G019_test: test %d OK\r\n", 3);
-#endif
-	num_tests_passed++;
+	send_message(3, m);
 
-	set_process_priority(6, LOWEST);
-	receive_message(0);;
+	receive_message(0);
 }
 
 void proc3(void) {
-	int i;
-	int *first = request_memory_block();
-	int *elem = first;
-	
-	for (i = 0; i < 10; i++){
-		*elem = i;
-		elem++;
-	}
-	
-	num_tests++;
-	
-	if (0 == release_memory_block(first)){
+	struct msg_t *m = receive_message(6);
+
 #ifdef DEBUG_0
-		printf("G019_test: test %d OK\r\n", 2);
+  num_tests++;
+  if (m->body[0] == 'a') {
+    printf("G019_test: test %d OK\r\n", 2);
+    num_tests_passed++;
+  } else {
+    printf("G019_test: test %d FAIL\r\n", 2);
+    num_tests_failed++;
+  }
 #endif
-		num_tests_passed++;
-	}
-	else {
-#ifdef DEBUG_0
-		printf("G019_test: test %d FAIL\r\n", 2);
-#endif
-		num_tests_failed++;
-	}
 	
-	set_process_priority(3, LOWEST);
 	receive_message(0);
 }
 
@@ -219,10 +167,10 @@ void proc5(void) {
   num_tests++;
 	free_ll(first);
   if (has_preempted != 1) {
-    printf("G019_test: test %d FAIL\r\n", 4);
+    printf("G019_test: test %d FAIL\r\n", 1);
     num_tests_failed++;
   } else {
-    printf("G019_test: test %d OK\r\n", 4);
+    printf("G019_test: test %d OK\r\n", 1);
     num_tests_passed++;
   }
 #endif

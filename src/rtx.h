@@ -63,8 +63,8 @@ extern int k_send_message(int, void*);
 #define send_message(pid, msg) _send_message((U32)k_send_message, pid, msg)
 extern int _send_message(U32 p_func, int pid, void *msg) __SVC_0;
 
-extern int k_receive_message(int);
+extern void *k_receive_message(int);
 #define receive_message(pid) _receive_message((U32)k_receive_message, pid)
-extern int _receive_message(U32 p_func, int pid) __SVC_0;
+extern void *_receive_message(U32 p_func, int pid) __SVC_0;
 
 #endif /* !RTX_H_ */
