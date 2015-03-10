@@ -45,7 +45,7 @@ int message_always_true_predicate(MSG *msg, void *v) {
 	return 1;
 }
 
-int k_send_message(int pid, void *envelope){
+int k_send_message(int pid, void *envelope) {
 	MSG *m = envelope;
 	m->sender_pid = k_get_current_pid();
 	m->destination_pid = pid;
@@ -57,7 +57,7 @@ int k_send_message(int pid, void *envelope){
 	return 0;
 }
 
-void *k_receive_message(int pid){
+void *k_receive_message(int pid) {
 	int curr = k_get_current_pid();
 	MSG *msg;
 	
@@ -67,13 +67,13 @@ void *k_receive_message(int pid){
 	return msg->usr_msg;
 }
 
-void *k_recieve_message_noblock(int pid){
+void *k_recieve_message_noblock(int pid) {
 	int curr = k_get_current_pid();
 	
 	return msg_queue_remove(&process_message_queues[curr], message_pid_predicate, &pid);
 }
 
-void *k_recieve_first_message_nonblock(int pid){
+void *k_recieve_first_message_nonblock() {
 	int curr = k_get_current_pid();
 	
 	return msg_queue_remove(&process_message_queues[curr], message_always_true_predicate, NULL);
