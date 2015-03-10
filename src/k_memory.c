@@ -116,17 +116,15 @@ U32 *alloc_stack(U32 size_b)
 }
 
 void *k_request_memory_block(void) {
-	MEM_BLK *first = first_free_blk;
+	MEM_BLK *first;
 
 	__disable_irq();
 #ifdef DEBUG_0 
 	//printf("k_request_memory_block: entering...\r\n");
 #endif /* ! DEBUG_0 */
 
-  if (!first) {
-		__enable_irq();
+  while (!(first = first_free_blk)) {
 		k_block_current_process(BLK_MEM);
-		return NULL; // won't be reached
 	}
 
   first_free_blk->free = 0;
@@ -138,18 +136,23 @@ void *k_request_memory_block(void) {
 
 int k_release_memory_block(void *memory_block) {
 	MEM_BLK *first = memory_block;
+	
+	__disable_irq();
 
 #ifdef DEBUG_0 
 	//printf("k_release_memory_block: releasing block @ 0x%x\r\n", memory_block);
 #endif /* ! DEBUG_0 */
 
-  if (first->free) return RTX_ERR;
+  if (first->free)
+		return RTX_ERR;
 
   first->next    = first_free_blk;
   first->free    = 1;
   first_free_blk = first;
 	
 	k_unblock_from_queue(BLK_MEM);
+	
+	__enable_irq();
 
   return RTX_OK;
 }

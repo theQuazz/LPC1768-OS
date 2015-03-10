@@ -172,15 +172,13 @@ struct llnode {
 };
 
 int free_ll(struct llnode *l) {
-  int ret = 0;
-  if (!l) return ret;
-  ret = free_ll(l->next);
-
-  if (!release_memory_block(l)) {
-    return RTX_ERR;
-  } else {
-    return ret;
-  }
+	struct llnode *tmp;
+	while (l) {
+		tmp = l->next;
+		k_release_memory_block(l);
+		l = tmp;
+	}
+	return 1;
 }
 
 void proc4(void) {
@@ -217,7 +215,8 @@ void proc5(void) {
 
 #ifdef DEBUG_0
   num_tests++;
-  if (has_preempted != 1 || free_ll(first) == RTX_ERR) {
+	free_ll(first);
+  if (has_preempted != 1) {
     printf("G019_test: test %d FAIL\r\n", 4);
     num_tests_failed++;
   } else {

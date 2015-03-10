@@ -16,8 +16,8 @@ void k_rtx_init(void)
         __disable_irq();
         memory_init();
         process_init();
-				heap_init();
 				timer_init(0);	
+				heap_init();
         __enable_irq();
 	
 	/* start the first process */
