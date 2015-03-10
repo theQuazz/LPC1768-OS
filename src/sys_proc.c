@@ -4,7 +4,7 @@
 #include "k_message.h"
 
 int message_timed_out_predicate(MSG *msg, void *v) {
-	return 1; /*msg->timeout >= gp_current_time;*/
+	return 1; /*msg->timeout >= g_timer_count;*/
 }
 
 void timer_i_process ( ) {
