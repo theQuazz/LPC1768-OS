@@ -6,6 +6,7 @@
  */
 
 #include <LPC17xx.h>
+#include "k_process.h"
 #include "uart.h"
 #include "uart_polling.h"
 #ifdef DEBUG_0
@@ -154,43 +155,9 @@ int uart_irq_init(int n_uart) {
 __asm void UART0_IRQHandler(void)
 {
 	PRESERVE8
-	IMPORT c_UART0_IRQHandler
+	IMPORT k_switch_uart_i_process
 	PUSH{r4-r11, lr}
-	BL c_UART0_IRQHandler
+	BL k_switch_uart_i_process
 	POP{r4-r11, pc}
 } 
-/**
- * @brief: c UART0 IRQ Handler
- */
-void c_UART0_IRQHandler(void)
-{
-	uint8_t IIR_IntId;	    // Interrupt ID from IIR 		 
-	LPC_UART_TypeDef *pUart = (LPC_UART_TypeDef *)LPC_UART0;
-	
-#ifdef DEBUG_0
-	uart1_put_string("Entering c_UART0_IRQHandler\n\r");
-#endif // DEBUG_0
-
-	/* Reading IIR automatically acknowledges the interrupt */
-	IIR_IntId = (pUart->IIR) >> 1 ; // skip pending bit in IIR 
-	if (IIR_IntId & IIR_RDA) { // Receive Data Avaialbe
-		/* read UART. Read RBR will clear the interrupt */
-#ifdef DEBUG_0
-		uart1_put_string("Reading a char = ");
-		uart1_put_char(pUart->RBR);
-		uart1_put_string("\n\r");
-#endif // DEBUG_0
-	} else if (IIR_IntId & IIR_THRE) {
-	/* THRE Interrupt, transmit holding register becomes empty */
-
-		pUart->IER ^= IER_THRE; // toggle the IER_THRE bit 
-		pUart->THR = '\0';
-	} else {  /* not implemented yet */
-#ifdef DEBUG_0
-			uart1_put_string("Should not get here!\n\r");
-#endif // DEBUG_0
-		return;
-	}
-
-	pUart->IER = IER_RBR | IER_RLS;
 }
