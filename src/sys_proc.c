@@ -4,18 +4,23 @@
 #include "k_message.h"
 #include "printf.h"
 #include "uart.h"
+#include "timer.h"
 #include <LPC17xx.h>
 
+extern MessageQueue process_message_queues[NUM_PROCS];
+
+extern volatile uint32_t g_timer_count;
+
 int message_timed_out_predicate(MSG *msg, void *v) {
-	return 1; /*msg->timeout >= g_timer_count;*/
+	return msg->timeout <= g_timer_count;
 }
 
 void timer_i_process ( ) {
 	MSG *msg;
 
-	while ( /*msg = message_queue_remove(&message_queues..., message_timed_out_predicate, NULL)*/ 0 ) {
-		__enable_irq();
-		//send_message ( target_pid , env ) ;
+	while ( msg = msg_queue_remove(&process_message_queues[TIMER_I_PROCESS_PID], message_timed_out_predicate, NULL) ) {
+		msg_enqueue(&process_message_queues[msg->destination_pid], msg);
+		k_conditional_unblock_pid(msg->destination_pid, BLK_MSG);
 	}
 }
 

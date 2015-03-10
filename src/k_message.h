@@ -15,6 +15,7 @@ typedef struct msg_t {
 	int sender_pid;
 	int destination_pid;
 	int mtype;
+	int timeout;
 } MSG;
 
 typedef struct message_queue {
@@ -23,6 +24,7 @@ typedef struct message_queue {
 } MessageQueue;
 
 int k_send_message(int, void*);
+int k_delayed_send(int, void *, int);
 void *k_receive_message(int);
 void *k_receive_first_message(void);
 void *k_receive_message_noblock(int);

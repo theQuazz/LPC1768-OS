@@ -66,7 +66,7 @@ void k_conditional_unblock_pid(int pid, PROC_STATE_E expected) {
 	p->m_state = RDY;
 	enqueue(&gp_priority_queues[p->m_state].priorities[p->m_priority], p);
 
-	if (p->m_priority > gp_current_process->m_priority) {
+	if (p->m_priority < gp_current_process->m_priority) {
 		k_release_processor();
 	}
 }
@@ -85,17 +85,17 @@ void process_init()
 
 	// sys procs
 	g_proc_table[0].m_pid = 0;
-	g_proc_table[0].m_stack_size = 8;
+	g_proc_table[0].m_stack_size = 0x100;
 	g_proc_table[0].mpf_start_pc = null_process;
 	g_proc_table[0].m_priority = NUM_PRIORITIES;
 
 	g_proc_table[TIMER_I_PROCESS_PID].m_pid = TIMER_I_PROCESS_PID;
-	g_proc_table[TIMER_I_PROCESS_PID].m_stack_size = 8;
+	g_proc_table[TIMER_I_PROCESS_PID].m_stack_size = 0x100;
 	g_proc_table[TIMER_I_PROCESS_PID].mpf_start_pc = NULL;
 	g_proc_table[TIMER_I_PROCESS_PID].m_priority = HIGH_PRIORITY; // never preempt
 
 	g_proc_table[UART_I_PROCESS_PID].m_pid = UART_I_PROCESS_PID;
-	g_proc_table[UART_I_PROCESS_PID].m_stack_size = 8;
+	g_proc_table[UART_I_PROCESS_PID].m_stack_size = 0x100;
 	g_proc_table[UART_I_PROCESS_PID].mpf_start_pc = NULL;
 	g_proc_table[UART_I_PROCESS_PID].m_priority = HIGH_PRIORITY; // never preempt
 
@@ -235,6 +235,10 @@ int k_release_processor(void)
 	
 	if ( gp_current_process == NULL  ) {
 		gp_current_process = gp_null_process;
+	}
+	
+	if ( gp_current_process->m_pid == 1 ) {
+		while (0) {}
 	}
 
 	process_switch(p_pcb_old);

@@ -9,6 +9,8 @@
 #include "k_process.h"
 #include <stdint.h>
 
+#define TIMER_I_PROCESS_PID 14
+
 extern uint32_t timer_init ( uint8_t n_timer ); /* initialize timer n_timer */
 
 #endif /* ! _TIMER_H_ */

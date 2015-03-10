@@ -407,11 +407,6 @@
               <FilePath>.\src\system_LPC17xx.c</FilePath>
             </File>
             <File>
-              <FileName>uart_polling.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\uart_polling.c</FilePath>
-            </File>
-            <File>
               <FileName>printf.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\printf.c</FilePath>
@@ -430,6 +425,16 @@
               <FileName>sys_proc.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\sys_proc.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_irq.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\uart_irq.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_polling.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\uart_polling.c</FilePath>
             </File>
           </Files>
         </Group>

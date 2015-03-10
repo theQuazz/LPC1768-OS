@@ -51,16 +51,12 @@ void set_test_procs() {
  */
 void proc1(void)
 {
-	int i;
-	
-	set_process_priority(1, HIGH);
-	for ( i = 1; i < 6; i++) {
-		set_process_priority(i + 1, LOW);
-	}
 #ifdef DEBUG_0
 	printf("G019_test: START\r\n");
 #endif
-	set_process_priority(1, LOWEST);
+	
+	release_memory_block(receive_message(5));
+	release_memory_block(receive_message(3));
 	
 #ifdef DEBUG_0
 	printf("G019_test: %d/%d tests OK\r\n", num_tests_passed, num_tests);
@@ -68,7 +64,7 @@ void proc1(void)
 	printf("G019_test: END\r\n");
 #endif
 	
-	receive_message(0);;
+	receive_message(0);
 }
 	
 void proc2(void)
@@ -85,7 +81,7 @@ void proc6(void)
 	struct msg_t *m = request_memory_block();
 	m->body[0] = 'a';
 	
-	send_message(3, m);
+	delayed_send(3, m, 2000);
 
 	receive_message(0);
 }
@@ -103,6 +99,7 @@ void proc3(void) {
     num_tests_failed++;
   }
 #endif
+	send_message(1, request_memory_block());
 	
 	receive_message(0);
 }
@@ -174,8 +171,8 @@ void proc5(void) {
     num_tests_passed++;
   }
 #endif
+	send_message(1, request_memory_block());
 
-  set_process_priority(5, LOWEST);
 	receive_message(0);;
 }
 
