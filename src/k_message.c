@@ -1,10 +1,14 @@
 #include "k_message.h"
+#include "timer.h"
+
+extern volatile uint32_t g_timer_count;
 
 MessageQueue process_message_queues[NUM_PROCS];
 
 void msg_enqueue(MessageQueue *q, MSG *p) {
   if (!q->last) q->last = p;
   if (q->first) q->first->prev = p;
+	else q->first = NULL;
   p->next = q->first;
   p->prev = NULL;
   q->first = p;
@@ -38,6 +42,9 @@ MSG *msg_queue_remove(MessageQueue *q, int pid) {
 
 int k_send_message(int pid, void *envelope){
 	MSG *m = envelope;
+
+	__disable_irq();
+
 	m->sender_pid = k_get_current_pid();
 	m->destination_pid = pid;
 	m->mtype = DEFAULT;
@@ -45,21 +52,50 @@ int k_send_message(int pid, void *envelope){
 	msg_enqueue(&process_message_queues[pid], m);
 	k_conditional_unblock_pid(pid, BLK_MSG);
 
+	__enable_irq();
 	return 0;
 }
 
 void *k_receive_message(int pid){
 	int curr = k_get_current_pid();
 	MSG *msg;
+
+	__disable_irq();
 	
 	while ((msg = msg_queue_remove(&process_message_queues[curr], pid)) == NULL) {
 		k_block_current_process(BLK_MSG);
 	}
+
+	__enable_irq();
 	return msg->usr_msg;
 }
 
 void *k_recieve_message_noblock(int pid){
 	int curr = k_get_current_pid();
+	void *msg;
 	
-	return msg_queue_remove(&process_message_queues[curr], pid);
+	__disable_irq();
+	
+	msg = msg_queue_remove(&process_message_queues[curr], pid);
+	
+	__enable_irq();
+	
+	return msg;
+}
+
+int k_delayed_send(int pid, void *message_envelope, int delay)
+{
+	MSG *m = message_envelope;
+
+	__disable_irq();
+
+	m->timeout = delay + g_timer_count;
+	m->sender_pid = k_get_current_pid();
+	m->destination_pid = pid;
+	m->mtype = DEFAULT;
+
+	msg_enqueue(&process_message_queues[TIMER_I_PROCESS_PID], m);
+
+	__enable_irq();
+	return 0;
 }

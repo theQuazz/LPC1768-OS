@@ -1,19 +1,32 @@
 #include "sys_proc.h"
 #include "k_rtx.h"
 #include "k_process.h"
+#include "k_message.h"
+#include "timer.h"
+
+extern MessageQueue process_message_queues[NUM_PROCS];
+
+extern volatile uint32_t g_timer_count;
 
 void timer_i_process ( ) {
+	MSG *msg;
+	
 	__disable_irq();
-	while ( /*pending messages to i-process*/ 0 ) {
-		//insert envelope into the timeout queue ;
+
+ 	msg = process_message_queues[TIMER_I_PROCESS_PID].first;
+
+	while ( msg ) {
+		if ( msg->timeout >= g_timer_count ) {
+			if (msg->next) msg->next->prev = msg->prev;
+			if (msg->prev) msg->prev->next = msg->next;
+			
+			msg->next = msg->prev = NULL;
+
+			k_send_message(msg->destination_pid, msg->usr_msg);
+		}
+		msg = msg->next;
 	}
-	while ( /*first message in queue timeout expired*/ 0 ) {
-		//msg_t * env = dequeue ( timeout_queue ) ;
-		//int target_pid = env->destination_pid ;
-		// forward msg to destination
-		__enable_irq();
-		//send_message ( target_pid , env ) ;
-	}
+
 	__enable_irq();
 	k_release_processor();
 }

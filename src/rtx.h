@@ -67,4 +67,8 @@ extern void *k_receive_message(int);
 #define receive_message(pid) _receive_message((U32)k_receive_message, pid)
 extern void *_receive_message(U32 p_func, int pid) __SVC_0;
 
+extern int k_delayed_send(int, void*, int);
+#define delayed_send(pid, msg, delay) _delayed_send((U32)k_receive_message, pid, msg, delay)
+extern int _delayed_send(U32 p_func, int pid, void *msg, int delay) __SVC_0;
+
 #endif /* !RTX_H_ */
