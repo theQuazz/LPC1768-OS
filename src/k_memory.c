@@ -126,7 +126,7 @@ void *k_request_memory_block(void) {
   while (!(first = first_free_blk)) {
 		k_block_current_process(BLK_MEM);
 	}
-
+	
   first_free_blk->free = 0;
   first_free_blk       = first_free_blk->next;
 
@@ -143,8 +143,10 @@ int k_release_memory_block(void *memory_block) {
 	//printf("k_release_memory_block: releasing block @ 0x%x\r\n", memory_block);
 #endif /* ! DEBUG_0 */
 
-  if (first->free)
+  if (first->free) {
+		printf("error\r\n");
 		return RTX_ERR;
+	}
 
   first->next    = first_free_blk;
   first->free    = 1;

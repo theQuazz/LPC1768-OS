@@ -175,9 +175,12 @@ int free_ll(struct llnode *l) {
 	struct llnode *tmp;
 	while (l) {
 		tmp = l->next;
+		
+		printf("freeing %x, %x\r\n", l, l->next);
 		k_release_memory_block(l);
 		l = tmp;
 	}
+	printf("done freeed dem\r\n"); 
 	return 1;
 }
 
@@ -207,11 +210,16 @@ void proc5(void) {
   struct llnode *first = request_memory_block();
   struct llnode *tmp;
 
+	first->next = NULL;
+
   do {
     tmp = request_memory_block();
     tmp->next = first;
+		printf("requested %x -> %x\r\n", tmp, tmp->next);
     first = tmp;
   } while (!maxed_out_mem);
+	
+	printf("got mem\r\n");
 
 #ifdef DEBUG_0
   num_tests++;
