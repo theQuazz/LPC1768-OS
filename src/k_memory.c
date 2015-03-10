@@ -60,9 +60,6 @@ void memory_init(void)
 	for (i = 0; i <= NUM_TEST_PROCS; i++) {
 		gp_pcbs[i] = (PCB *)top_address;
 		top_address += sizeof(PCB);
-#ifdef DEBUG_0
-		printf("0x%x \r\n", top_address);
-#endif
 	}
 	
 	first_free_blk = (MEM_BLK *) top_address;

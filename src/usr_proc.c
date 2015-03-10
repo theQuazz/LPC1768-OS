@@ -178,7 +178,6 @@ int free_ll(struct llnode *l) {
 		k_release_memory_block(l);
 		l = tmp;
 	}
-	printf("done freeed dem\r\n"); 
 	return 1;
 }
 
@@ -215,8 +214,6 @@ void proc5(void) {
     tmp->next = first;
     first = tmp;
   } while (!maxed_out_mem);
-	
-	printf("got mem\r\n");
 
 #ifdef DEBUG_0
   num_tests++;
