@@ -1,6 +1,7 @@
 #include "sys_proc.h"
 #include "k_rtx.h"
 #include "k_process.h"
+#include "k_memory.h"
 #include "k_message.h"
 #include "printf.h"
 #include "uart.h"
@@ -24,22 +25,41 @@ void timer_i_process ( ) {
 	}
 }
 
+void read_character(char c) {
+	KCD_MSG *m;
+	switch (c) {
+#ifdef DEBUG_HOTKEYS
+		case '!':
+			k_print_queue(RDY);
+			break;
+		case '@':
+			k_print_queue(BLK_MEM);
+			break;
+		case '#':
+			k_print_queue(BLK_MSG);
+			break;
+#endif
+		default:
+			m = k_request_memory_block();
+			m->mtype = KCD_REG;
+			m->body[0] = c;
+			k_send_message(KCD_PROCESS_PID, m);
+	}
+
+#ifdef DEBUG_0
+		printf("Reading char %c\n\r", c);
+#endif // DEBUG_0
+}
+
 void uart_i_process ( ) {
 	uint8_t IIR_IntId;	    // Interrupt ID from IIR 		 
-	LPC_UART_TypeDef *pUart = (LPC_UART_TypeDef *)LPC_UART0;
-	char c;
+	LPC_UART_TypeDef *pUart = (LPC_UART_TypeDef *)LPC_UART1;
 
 	/* Reading IIR automatically acknowledges the interrupt */
 	IIR_IntId = (pUart->IIR) >> 1 ; // skip pending bit in IIR 
 	if (IIR_IntId & IIR_RDA) { // Receive Data Avaialbe
 		/* read UART. Read RBR will clear the interrupt */
-		c = pUart->RBR;
-		
-		// TODO: send message to proc_KCD
-		
-#ifdef DEBUG_0
-		printf("Reading char %c\n\r", c);
-#endif // DEBUG_0
+		read_character(pUart->RBR);
 	} else if (IIR_IntId & IIR_THRE) {
 		/* THRE Interrupt, transmit holding register becomes empty */
 		

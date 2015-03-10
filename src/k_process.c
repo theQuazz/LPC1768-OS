@@ -214,6 +214,23 @@ int process_switch(PCB *p_pcb_old)
 	}
 	return RTX_OK;
 }
+
+void k_print_queue(PROC_STATE_E state) {
+	int i;
+	PriorityQueue *pq = &gp_priority_queues[state];
+	PCBQueue *q;
+	PCB *it;
+	for (i = 0; i < NUM_PRIORITIES; i++) {
+		q = &(pq->priorities[i]);
+		printf("Procs at priority %d:\n\r", i);
+		it = q->first;
+		while (it) {
+			printf("%d ", it->m_pid);
+			it = it->next;
+		}
+		printf("\n\r");
+	}
+}
 /**
  * @brief release_processor(). 
  * @return RTX_ERR on error and zero on success
@@ -289,6 +306,7 @@ PCB *dequeue(PCBQueue *q) {
   if (!tmp) return NULL;
   q->last = tmp->prev;
   if (q->last) q->last->next = NULL;
+	if (q->first == tmp) q->first = NULL;
 	tmp->next = tmp->prev = NULL;
   return tmp;
 }

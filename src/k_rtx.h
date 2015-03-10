@@ -18,6 +18,8 @@
 #define NUM_SYS_PROCS  2
 #define NUM_PROCS      NUM_TEST_PROCS + NUM_SYS_PROCS + 1
 #define NUM_PRIORITIES 4
+#define KCD_PROCESS_PID 12
+#define CRT_PROCESS_PID 13
 #define TIMER_I_PROCESS_PID 14
 #define UART_I_PROCESS_PID 15
 
@@ -26,6 +28,12 @@
 #else
 #define USR_SZ_STACK 0x100         /* user proc stack size 218B  */
 #endif /* DEBUG_0 */
+
+
+typedef struct kcd_msg_t {
+	int mtype;
+	char body[1];
+} KCD_MSG;
 
 /*----- Types -----*/
 typedef unsigned char U8;

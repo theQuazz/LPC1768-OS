@@ -81,7 +81,7 @@ void proc6(void)
 	struct msg_t *m = request_memory_block();
 	m->body[0] = 'a';
 	
-	delayed_send(3, m, 2000);
+	delayed_send(3, m, 50);
 
 	receive_message(0);
 }
@@ -183,18 +183,42 @@ void proc_C(void) { receive_message(0); }
 void set_process_priority_process(void) { receive_message(0); }
 void wall_clock_display(void) { receive_message(0); }
 
+
+enum kcd_state_t {
+	NOTHING,
+	PERCENT,
+	PERCENT_W,
+	PERCENT_W_S
+};
+
+
 // this func needs work!
 void proc_KCD(void) {
 	KCD_MSG *msg;
 	char *body;
+	enum kcd_state_t state = NOTHING;
+
 	while (msg = receive_message(UART_I_PROCESS_PID)) {
 		// decode msg
 		body = msg->body;
 		
-		if (body[0] == '%'){
+		switch (body[0]) {
+			case '%':
+				if (state == NOTHING) state = PERCENT;
+				break;
+			case 'W':
+				if (state == PERCENT) state = PERCENT_W;
+				break;
+			case 'S':
+				if (state == PERCENT_W) state = PERCENT_W_S;
+				break;
+			case '\r':
+				printf("doing things\r\n", state);
+				break;
+			default:
+				state = NOTHING;
 		}
-		else{
-		}
+		printf("%d\r\n", state);
 	}
 }
 

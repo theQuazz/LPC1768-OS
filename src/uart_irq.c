@@ -152,7 +152,7 @@ int uart_irq_init(int n_uart) {
  *       push and pop instructions in the assembly routine. 
  *       The actual c_UART0_IRQHandler does the rest of irq handling
  */
-__asm void UART0_IRQHandler(void)
+__asm void UART1_IRQHandler(void)
 {
 	PRESERVE8
 	IMPORT k_switch_uart_i_process

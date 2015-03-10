@@ -35,6 +35,7 @@ int k_get_current_pid(void);         									/* */
 void k_conditional_unblock_pid(int pid, PROC_STATE_E expected);
 void k_switch_timer_i_process(void);
 void k_switch_uart_i_process(void);
+void k_print_queue(PROC_STATE_E);
 
 extern U32 *alloc_stack(U32 size_b);    /* allocate stack for a process */
 extern void __rte(void);                /* pop exception stack frame */
