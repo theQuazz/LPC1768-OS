@@ -181,44 +181,71 @@ void proc_A(void) { receive_message(0); }
 void proc_B(void) { receive_message(0); }
 void proc_C(void) { receive_message(0); }
 void set_process_priority_process(void) { receive_message(0); }
-void wall_clock_display(void) { receive_message(0); }
+
+void wall_clock_display(void) {
+	COMMAND_MSG *msg;
+	KCD_MSG *register_w = request_memory_block();
+
+	register_w->mtype = KCD_REG;
+	register_w->body[0] = 'W';
+	register_w->from = WALL_CLOCK_DISPLAY_PID;
+	send_message(KCD_PID, register_w);
+	
+	while (msg = receive_message(KCD_PID)) {
+		printf("WCD %s\r\n", msg->body);
+	}
+}
 
 
 enum kcd_state_t {
 	NOTHING,
 	PERCENT,
-	PERCENT_W,
-	PERCENT_W_S
+	READING
 };
 
+int registered_command_pids[128] = { 0 };
 
 // this func needs work!
 void proc_KCD(void) {
 	KCD_MSG *msg;
 	char *body;
 	enum kcd_state_t state = NOTHING;
+	COMMAND_MSG *command;
 
-	while (msg = receive_message(UART_I_PROCESS_PID)) {
+	while (msg = receive_first_message()) {
 		// decode msg
 		body = msg->body;
-		
-		switch (body[0]) {
-			case '%':
-				if (state == NOTHING) state = PERCENT;
-				break;
-			case 'W':
-				if (state == PERCENT) state = PERCENT_W;
-				break;
-			case 'S':
-				if (state == PERCENT_W) state = PERCENT_W_S;
-				break;
-			case '\r':
-				printf("doing things\r\n", state);
-				break;
-			default:
-				state = NOTHING;
+		if (msg->mtype == KCD_REG) {
+			registered_command_pids[msg->body[0]] = msg->from;
+			release_memory_block(msg);
+		} else {
+			switch (body[0]) {
+				case '%':
+					if (state == NOTHING) state = PERCENT;
+					break;
+				case '\r':
+					if (state == READING) {
+						command->body[command->length] = '\0';
+						send_message(registered_command_pids[command->body[0]], command);
+						state = NOTHING;
+					}
+					break;
+				default:
+					if (state == PERCENT) {
+						if (registered_command_pids[body[0]]) {
+							command = request_memory_block();
+							command->length = 0;
+							state = READING;
+						} else {
+							state = NOTHING;
+						}
+					} else if (state == READING) {
+						command->body[command->length++] = body[0];
+					}
+			}
+			send_message(CRT_PID, msg);
+			printf("%d\r\n", state);
 		}
-		printf("%d\r\n", state);
 	}
 }
 

@@ -99,7 +99,7 @@ void *k_recieve_message_noblock(int pid) {
 	return msg_queue_remove(&process_message_queues[curr], message_pid_predicate, &pid);
 }
 
-void *k_recieve_first_message_nonblock() {
+void *k_receive_first_message_nonblock() {
 	int curr = k_get_current_pid();
 	void *msg;
 

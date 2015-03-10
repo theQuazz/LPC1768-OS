@@ -44,7 +44,7 @@ void read_character(char c) {
 #endif
 		default:
 			m = k_request_memory_block();
-			m->mtype = KCD_REG;
+			m->mtype = DEFAULT;
 			m->body[0] = c;
 			k_send_message(KCD_PROCESS_PID, m);
 	}
@@ -54,9 +54,16 @@ void read_character(char c) {
 #endif // DEBUG_0
 }
 
+void sanity_i_process() {}
+
 void uart_i_process ( ) {
 	uint8_t IIR_IntId;	    // Interrupt ID from IIR 		 
 	LPC_UART_TypeDef *pUart = (LPC_UART_TypeDef *)LPC_UART1;
+	KCD_MSG *msg = k_receive_first_message_nonblock();
+	
+	if (msg) {
+		pUart->THR = msg->body[0];
+	}
 
 	/* Reading IIR automatically acknowledges the interrupt */
 	IIR_IntId = (pUart->IIR) >> 1 ; // skip pending bit in IIR 

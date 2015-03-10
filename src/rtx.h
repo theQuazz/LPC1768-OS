@@ -37,7 +37,32 @@ typedef struct proc_init
 typedef struct kcd_msg_t {
 	int mtype;
 	char body[1];
+	int from;
 } KCD_MSG;
+
+typedef struct command_msg_t {
+	char body[32];
+	int length;
+} COMMAND_MSG;
+
+typedef enum process_id {
+	NULL_PID,
+	TEST_1_PID,
+	TEST_2_PID,
+	TEST_3_PID,
+	TEST_4_PID,
+	TEST_5_PID,
+	TEST_6_PID,
+	A_PID,
+	B_PID,
+	C_PID,
+	SET_PROCESS_PRIORITY_PID,
+	WALL_CLOCK_DISPLAY_PID,
+	KCD_PID,
+	CRT_PID,
+	TIMER_PID,
+	UART_PID
+} PROCESS_ID;
 
 /* ----- RTX User API ----- */
 #define __SVC_0  __svc_indirect(0)
