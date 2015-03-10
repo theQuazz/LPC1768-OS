@@ -52,14 +52,14 @@ void set_test_procs() {
 void proc1(void)
 {
 	int i;
-#ifdef DEBUG_0
-	printf("G019_test: START\r\n");
-#endif
 	
 	set_process_priority(1, HIGH);
 	for ( i = 1; i < 6; i++) {
 		set_process_priority(i + 1, LOW);
 	}
+#ifdef DEBUG_0
+	printf("G019_test: START\r\n");
+#endif
 	set_process_priority(1, LOWEST);
 	
 #ifdef DEBUG_0
@@ -91,7 +91,7 @@ void proc2(void)
 	}
 	
 	set_process_priority(2, LOWEST);
-	release_processor();
+	while (1) {};
 }
 
 void proc6(void)
@@ -111,7 +111,6 @@ void proc6(void)
 	}
 	
 	set_process_priority(6, LOW);
-	release_processor();
 	
 	prio = get_process_priority(6);
 	if (prio != LOW) {
@@ -128,7 +127,7 @@ void proc6(void)
 	num_tests_passed++;
 
 	set_process_priority(6, LOWEST);
-	release_processor();
+	while (1) {};
 }
 
 void proc3(void) {
@@ -157,7 +156,7 @@ void proc3(void) {
 	}
 	
 	set_process_priority(3, LOWEST);
-	release_processor();
+	while (1) {}
 }
 
 /*
@@ -194,7 +193,6 @@ void proc4(void) {
   }
 
   set_process_priority(5, HIGH);
-  release_processor();
 
   maxed_out_mem = 1;
 
@@ -204,7 +202,7 @@ void proc4(void) {
   }
 
   set_process_priority(4, LOWEST);
-  release_processor();
+	while (1) {};
 }
 
 void proc5(void) {
@@ -229,14 +227,14 @@ void proc5(void) {
 #endif
 
   set_process_priority(5, LOWEST);
-	release_processor();
+	while (1) {};
 }
 
 
-void proc_A(void) { while (1) release_processor(); }
-void proc_B(void) { while (1) release_processor(); }
-void proc_C(void) { while (1) release_processor(); }
-void set_process_priority_process(void) { while (1) release_processor(); }
-void wall_clock_display(void) { while (1) release_processor(); }
-void proc_KCD(void) { while (1) release_processor(); }
-void proc_CRT(void) { while (1) release_processor(); }
+void proc_A(void) { while (1) {} }
+void proc_B(void) { while (1) {} }
+void proc_C(void) { while (1) {} }
+void set_process_priority_process(void) { while (1) {} }
+void wall_clock_display(void) { while (1) {} }
+void proc_KCD(void) { while (1) {} }
+void proc_CRT(void) { while (1) {} }

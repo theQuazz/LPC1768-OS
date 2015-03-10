@@ -181,6 +181,7 @@ int process_switch(PCB *p_pcb_old)
 		}
 		gp_current_process->m_state = RUN;
 		__set_MSP((U32) gp_current_process->mp_sp);
+		__enable_irq();
 		__rte();  // pop exception stack frame from the stack for a new processes
 	} 
 	
@@ -210,6 +211,8 @@ int k_release_processor(void)
 {
 	PCB *p_pcb_old = NULL;
 	
+	__disable_irq();
+	
 	p_pcb_old = gp_current_process;
 
   if ( p_pcb_old != gp_null_process && p_pcb_old->m_state == RUN ) {
@@ -224,6 +227,7 @@ int k_release_processor(void)
 
 	process_switch(p_pcb_old);
 
+	__enable_irq();
 	return RTX_OK;
 }
 
@@ -235,9 +239,7 @@ void k_switch_timer_i_process(void) {
  * @brief null_process()
  */
 void null_process() {
-	while (1) {
-		k_release_processor();
-	}
+	while (1) {}
 }
 
 /**
