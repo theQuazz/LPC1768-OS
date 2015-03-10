@@ -30,12 +30,15 @@ void read_character(char c) {
 	switch (c) {
 #ifdef DEBUG_HOTKEYS
 		case '!':
+			printf("RDY Queue:\r\n");
 			k_print_queue(RDY);
 			break;
 		case '@':
+			printf("BLK_MEM Queue:\r\n");
 			k_print_queue(BLK_MEM);
 			break;
 		case '#':
+			printf("BLK_MSG Queue:\r\n");
 			k_print_queue(BLK_MSG);
 			break;
 #endif

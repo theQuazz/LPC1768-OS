@@ -220,9 +220,11 @@ void k_print_queue(PROC_STATE_E state) {
 	PriorityQueue *pq = &gp_priority_queues[state];
 	PCBQueue *q;
 	PCB *it;
+	printf(" priority | process ids\r\n");
+	printf("-----------------------------------------------\r\n");
 	for (i = 0; i < NUM_PRIORITIES; i++) {
 		q = &(pq->priorities[i]);
-		printf("Procs at priority %d:\n\r", i);
+		printf("        %d | ", i);
 		it = q->first;
 		while (it) {
 			printf("%d ", it->m_pid);
