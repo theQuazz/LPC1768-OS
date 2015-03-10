@@ -104,6 +104,7 @@ __asm void TIMER0_IRQHandler(void)
 void c_TIMER0_IRQHandler(void)
 {
     /* ack interupt, see section 21.6.1 on pg 493 of LPC17XX_UM */
+		__disable_irq();
     LPC_TIM0->IR = BIT(0);
     g_timer_count++;
 		k_switch_timer_i_process();
