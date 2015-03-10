@@ -31,6 +31,11 @@ typedef struct proc_init
 	void (*mpf_start_pc) ();/* entry point of the process */    
 } PROC_INIT;
 
+typedef struct kcd_msg_t {
+	int mtype;
+	char body[1];
+} KCD_MSG;
+
 /* ----- RTX User API ----- */
 #define __SVC_0  __svc_indirect(0)
 
@@ -66,5 +71,13 @@ extern int _send_message(U32 p_func, int pid, void *msg) __SVC_0;
 extern void *k_receive_message(int);
 #define receive_message(pid) _receive_message((U32)k_receive_message, pid)
 extern void *_receive_message(U32 p_func, int pid) __SVC_0;
+
+extern void *k_recieve_first_message_nonblock();
+#define recieve_first_message_nonblock() _recieve_first_message_nonblock((U32)k_recieve_first_message_nonblock)
+extern void *_recieve_first_message_nonblock(U32 p_func) __SVC_0;
+
+extern void *k_recieve_first_message();
+#define recieve_first_message() _recieve_first_message((U32)k_recieve_first_message)
+extern void *_recieve_first_message(U32 p_func) __SVC_0;
 
 #endif /* !RTX_H_ */

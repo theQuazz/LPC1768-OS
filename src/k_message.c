@@ -67,6 +67,16 @@ void *k_receive_message(int pid) {
 	return msg->usr_msg;
 }
 
+void *k_receive_first_message() {
+	int curr = k_get_current_pid();
+	MSG *msg;
+	
+	while ((msg = msg_queue_remove(&process_message_queues[curr], message_always_true_predicate, NULL)) == NULL) {
+		k_block_current_process(BLK_MSG);
+	}
+	return msg->usr_msg;
+}
+
 void *k_recieve_message_noblock(int pid) {
 	int curr = k_get_current_pid();
 	

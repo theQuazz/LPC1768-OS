@@ -185,5 +185,20 @@ void proc_B(void) { receive_message(0); }
 void proc_C(void) { receive_message(0); }
 void set_process_priority_process(void) { receive_message(0); }
 void wall_clock_display(void) { receive_message(0); }
-void proc_KCD(void) { receive_message(0); }
-void proc_CRT(void) { receive_message(0); }
+
+// this func needs work!
+void proc_KCD(void) {
+	KCD_MSG *msg;
+	while (msg = recieve_message(UART_I_PROCESS_PID)) {
+		// decode msg
+	}
+}
+
+// this func needs work!
+void proc_CRT(void) {
+	KCD_MSG *msg;
+	while (msg = recieve_first_message()) {
+		// TODO: should we process longer strings then break them down into chars to send to the uart_i_proc?
+		send_message(msg, UART_I_PROCESS_PID);
+	}
+}
