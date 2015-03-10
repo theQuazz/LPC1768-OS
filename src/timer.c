@@ -93,7 +93,9 @@ __asm void TIMER0_IRQHandler(void)
 {
     PRESERVE8
     IMPORT c_TIMER0_IRQHandler
+		PUSH{r4-r11, lr}
     BL c_TIMER0_IRQHandler
+		POP{r4-r11, pc}
 }
 
 /**

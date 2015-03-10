@@ -7,6 +7,7 @@
 #define _TIMER_H_
 
 #include "k_process.h"
+#include <stdint.h>
 
 extern uint32_t timer_init ( uint8_t n_timer ); /* initialize timer n_timer */
 

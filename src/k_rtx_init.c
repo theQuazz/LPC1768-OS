@@ -6,19 +6,18 @@
  */
 
 #include "k_rtx_init.h"
-#include "uart_polling.h"
 #include "k_memory.h"
 #include "k_process.h"
 #include "timer.h"
+#include "printf.h"
 
 void k_rtx_init(void)
 {
         __disable_irq();
-        uart0_init();   
         memory_init();
         process_init();
 				heap_init();
-				timer_init(0);
+				timer_init(0);	
         __enable_irq();
 	
 	/* start the first process */

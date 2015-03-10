@@ -15,6 +15,8 @@
 #include <LPC17xx.h>
 #include <system_LPC17xx.h>
 #include "rtx.h"
+#include "uart.h"
+#include "uart_polling.h"
 #ifdef DEBUG_0
 #include "uart_polling.h"
 #include "printf.h"
@@ -23,10 +25,16 @@
 int main() 
 {	
 	/* CMSIS system initialization */
-	SystemInit(); 
+	SystemInit();
+
+	__disable_irq();
+	uart0_irq_init();
+	uart1_init();
+	
 #ifdef DEBUG_0
 	init_printf(NULL, putc);
 #endif /* DEBUG_0 */
+	__enable_irq();
 	
 	/* start the RTX and built-in processes */
 	rtx_init();  
