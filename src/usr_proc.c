@@ -80,7 +80,7 @@ void proc2(void)
 	
 	release_memory_block(receive_message(TEST_5_PID));
 	
-	delayed_send(3, m, 50);
+	delayed_send(3, m, 1000);
 
 	receive_message(0);
 }
@@ -137,7 +137,7 @@ void proc4(void) {
 
   set_process_priority(5, HIGH);
 	
-	delayed_send(TEST_4_PID, cache[0], 50);
+	delayed_send(TEST_4_PID, cache[0], 2000);
 	receive_message(TEST_4_PID);
 
   maxed_out_mem = 1;
@@ -220,7 +220,7 @@ void wall_clock_display(void) {
 			send_message(CRT_PID, output);
 			msg = request_memory_block();
 			msg->length = -1;
-			delayed_send(WALL_CLOCK_DISPLAY_PID, msg, 10);
+			delayed_send(WALL_CLOCK_DISPLAY_PID, msg, 1000);
 		} else if (strncmp(msg->body, "WS ", 3) == 0 && msg->length == 11) {
 			release_memory_block(msg);
 			hour = atoi(msg->body + 3);
