@@ -53,6 +53,10 @@ int k_send_message(int pid, void *envelope) {
 	MSG *m = envelope;
 
 	__disable_irq();
+	
+	if (!(0 <= pid && pid < NUM_PROCS)) {
+		return RTX_ERR;
+	}
 
 	m->sender_pid = k_get_current_pid();
 	m->destination_pid = pid;

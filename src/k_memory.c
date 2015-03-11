@@ -141,7 +141,6 @@ int k_release_memory_block(void *memory_block) {
 #endif /* ! DEBUG_0 */
 
   if (first->free) {
-		printf("error\r\n");
 		return RTX_ERR;
 	}
 

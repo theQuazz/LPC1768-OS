@@ -49,10 +49,6 @@ void read_character(char c) {
 			m->length = 1;
 			k_send_message(KCD_PROCESS_PID, m);
 	}
-
-#ifdef DEBUG_0
-		printf("Reading char %c\n\r", c);
-#endif // DEBUG_0
 }
 
 extern volatile int buffer_pos;

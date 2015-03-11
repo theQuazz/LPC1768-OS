@@ -9,6 +9,8 @@
 #include "rtx.h"
 #include "uart_polling.h"
 #include "usr_proc.h"
+#include "string.h"
+#include "stdlib.h"
 
 #ifdef DEBUG_0
 #include "printf.h"
@@ -66,28 +68,23 @@ void proc1(void)
 	
 	receive_message(0);
 }
-	
-void proc2(void)
-{
-	receive_message(0);
-}
 
 struct msg_t {
 	char body[1];
 };
-
-void proc6(void)
+	
+void proc2(void)
 {
 	struct msg_t *m = request_memory_block();
 	m->body[0] = 'a';
 	
-	delayed_send(3, m, 50);
+	delayed_send(3, m, 2000);
 
 	receive_message(0);
 }
 
 void proc3(void) {
-	struct msg_t *m = receive_message(6);
+	struct msg_t *m = receive_message(2);
 
 #ifdef DEBUG_0
   num_tests++;
@@ -136,6 +133,9 @@ void proc4(void) {
   }
 
   set_process_priority(5, HIGH);
+	
+	delayed_send(TEST_4_PID, cache[0], 1000);
+	receive_message(TEST_4_PID);
 
   maxed_out_mem = 1;
 
@@ -176,6 +176,11 @@ void proc5(void) {
 	receive_message(0);;
 }
 
+void proc6(void)
+{
+	receive_message(NULL_PID);
+}
+
 
 void proc_A(void) { receive_message(0); }
 void proc_B(void) { receive_message(0); }
@@ -184,15 +189,59 @@ void set_process_priority_process(void) { receive_message(0); }
 
 void wall_clock_display(void) {
 	GEN_MSG *msg;
+	GEN_MSG *output;
 	KCD_MSG *register_w = request_memory_block();
+	int running = 0;
+	long time = 0;
+	int sec, min, hour;
 
 	register_w->mtype = KCD_REG;
 	register_w->body[0] = 'W';
 	register_w->from = WALL_CLOCK_DISPLAY_PID;
 	send_message(KCD_PID, register_w);
 	
-	while (msg = receive_message(KCD_PID)) {
-		printf("WCD %s\r\n", msg->body);
+	while (msg = receive_first_message()) {
+		if (msg->length == -1) {
+			if (!running) continue;
+			release_memory_block(msg);
+			time += 1;
+			output = request_memory_block();
+			hour = (time / 3600) % 24;
+			min  = (time / 60) % 60;
+			sec  = time % 60;
+			sprintf(output->body, "\r%d%d:%d%d:%d%d", hour / 10, hour % 10, min / 10, min % 10, sec / 10, sec % 10);
+			output->length = strlen(output->body);
+			send_message(CRT_PID, output);
+			msg = request_memory_block();
+			msg->length = -1;
+			delayed_send(WALL_CLOCK_DISPLAY_PID, msg, 1000);
+		} else if (strncmp(msg->body, "WS ", 3) == 0 && msg->length == 11) {
+			release_memory_block(msg);
+			hour = atoi(msg->body + 3);
+			min  = atoi(msg->body + 6);
+			sec  = atoi(msg->body + 9);
+			time = sec + min * 60 + hour * 3600 - 1;
+			if (!running) {
+				running = 1;
+				msg = request_memory_block();
+				msg->length = -1;
+				send_message(WALL_CLOCK_DISPLAY_PID, msg);
+			}
+		} else if (strncmp(msg->body, "WR", 2) == 0) {
+			release_memory_block(msg);
+			time = -1;
+			if (!running) {
+				running = 1;
+				msg = request_memory_block();
+				msg->length = -1;
+				send_message(WALL_CLOCK_DISPLAY_PID, msg);
+			}
+		} else if (strncmp(msg->body, "WT", 2) == 0) {
+			release_memory_block(msg);
+			running = 0;
+		} else {
+			release_memory_block(msg);
+		}
 	}
 }
 
@@ -212,7 +261,6 @@ void proc_KCD(void) {
 	GEN_MSG *command;
 
 	while (msg = receive_first_message()) {
-		// decode msg
 		if (msg->mtype == KCD_REG) {
 			registered_command_pids[msg->body[0]] = msg->from;
 			release_memory_block(msg);
@@ -246,7 +294,6 @@ void proc_KCD(void) {
 					}
 			}
 			send_message(CRT_PID, msg_gen);
-			printf("%d\r\n", state);
 		}
 	}
 }
