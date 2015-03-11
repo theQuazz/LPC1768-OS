@@ -191,7 +191,41 @@ void proc_A(void) {
 
 void proc_B(void) { receive_message(0); }
 void proc_C(void) { receive_message(0); }
-void set_process_priority_process(void) { receive_message(0); }
+
+void set_process_priority_process(void) {
+	KCD_MSG *register_c = request_memory_block();
+	GEN_MSG *msg;
+	char *pos;
+	int pid, prio;
+	int err;
+
+	register_c->mtype = KCD_REG;
+	register_c->body[0] = 'C';
+	register_c->from = SET_PROCESS_PRIORITY_PID;
+	send_message(KCD_PID, register_c);
+
+	while (msg = receive_message(KCD_PID)) {
+		pos = memchr(msg->body, ' ', msg->length);
+		pos = strtok(pos, " ");
+		if (pos == NULL) goto set_process_priority_error;
+		pid = atoi(pos);
+		pos = strtok(NULL, " ");
+		if (pos == NULL) goto set_process_priority_error;
+		prio = atoi(pos);
+		release_memory_block(msg);
+		err = set_process_priority(pid, prio);
+		if (err == RTX_ERR) {
+			msg = request_memory_block();
+			strcpy(msg->body, "Invalid pid/priority\n\r");
+			msg->length = strlen("Invalid pid/priority\n\r");
+			send_message(CRT_PID, msg);
+		}
+		continue;
+	set_process_priority_error:
+		release_memory_block(msg);
+		printf("set_process_priority_error\r\n");
+	}
+}
 
 void wall_clock_display(void) {
 	GEN_MSG *msg;
