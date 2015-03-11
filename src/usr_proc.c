@@ -57,8 +57,8 @@ void proc1(void)
 	printf("G019_test: START\r\n");
 #endif
 	
-	release_memory_block(receive_message(5));
-	release_memory_block(receive_message(3));
+	release_memory_block(receive_message(TEST_5_PID));
+	release_memory_block(receive_message(TEST_3_PID));
 	
 #ifdef DEBUG_0
 	printf("G019_test: %d/%d tests OK\r\n", num_tests_passed, num_tests);
@@ -78,6 +78,8 @@ void proc2(void)
 	struct msg_t *m = request_memory_block();
 	m->body[0] = 'a';
 	
+	release_memory_block(receive_message(TEST_5_PID));
+	
 	delayed_send(3, m, 50);
 
 	receive_message(0);
@@ -95,6 +97,7 @@ void proc3(void) {
     printf("G019_test: test %d FAIL\r\n", 2);
     num_tests_failed++;
   }
+	release_memory_block(m);
 #endif
 	send_message(1, request_memory_block());
 	
@@ -171,18 +174,21 @@ void proc5(void) {
     num_tests_passed++;
   }
 #endif
-	send_message(1, request_memory_block());
+	send_message(TEST_1_PID, request_memory_block());
+	send_message(TEST_2_PID, request_memory_block());
 
 	receive_message(0);;
 }
 
-void proc6(void)
-{
-	while (1) {};
+void proc6(void) {
+	while (1) {}
 }
 
 
-void proc_A(void) { while (1) {}; }
+void proc_A(void) {
+	while (1) {}
+}
+
 void proc_B(void) { receive_message(0); }
 void proc_C(void) { receive_message(0); }
 void set_process_priority_process(void) { receive_message(0); }
@@ -270,6 +276,10 @@ void proc_KCD(void) {
 			switch (body[0]) {
 				case '%':
 					if (state == NOTHING) state = PERCENT;
+					break;
+				case '\b':
+					if (state == READING && command->length > 0)
+						command->body[--command->length] = '\0';
 					break;
 				case '\r':
 					msg_gen->body[msg_gen->length++] = '\n';

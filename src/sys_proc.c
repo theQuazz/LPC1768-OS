@@ -30,15 +30,21 @@ void read_character(char c) {
 	switch (c) {
 #ifdef DEBUG_HOTKEYS
 		case '!':
-			printf("RDY Queue:\r\n");
+			printf("\r\n");
+			printf("                   RDY Queue                   \r\n");
+			printf("\r\n");
 			k_print_queue(RDY);
 			break;
 		case '@':
-			printf("BLK_MEM Queue:\r\n");
+			printf("\r\n");
+			printf("                 BLK_MEM Queue                 \r\n");
+			printf("\r\n");
 			k_print_queue(BLK_MEM);
 			break;
 		case '#':
-			printf("BLK_MSG Queue:\r\n");
+			printf("\r\n");
+			printf("                 BLK_MSG Queue                 \r\n");
+			printf("\r\n");
 			k_print_queue(BLK_MSG);
 			break;
 #endif
@@ -71,7 +77,7 @@ void uart_i_process_ih ( ) {
 		} else {
 			pUart->IER ^= IER_THRE; // toggle the IER_THRE bit 
 			buffer_pos = 0;
-			k_release_memory_block(buffer);
+			k_release_memory_block((GEN_MSG *) buffer);
 		}
 	} else {  /* not implemented yet */
 #ifdef DEBUG_0
