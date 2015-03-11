@@ -265,6 +265,13 @@ void proc_KCD(void) {
 	char *body;
 	enum kcd_state_t state = NOTHING;
 	GEN_MSG *command;
+	int pid;
+	
+	// msg_gen = request_memory_block();
+	// strcpy(msg_gen->body, "> ");
+	// msg_gen->length = 2;
+	// send_message(CRT_PID, msg_gen);
+	// msg_gen = NULL;
 
 	while (msg = receive_first_message()) {
 		if (msg->mtype == KCD_REG) {
@@ -278,27 +285,43 @@ void proc_KCD(void) {
 					if (state == NOTHING) state = PERCENT;
 					break;
 				case '\b':
-					if (state == READING && command->length > 0)
-						command->body[--command->length] = '\0';
-					break;
-				case '\r':
-					msg_gen->body[msg_gen->length++] = '\n';
+					msg_gen->body[msg_gen->length++] = ' ';
+					msg_gen->body[msg_gen->length++] = '\b';
 					if (state == READING) {
-						command->body[command->length] = '\0';
-						send_message(registered_command_pids[command->body[0]], command);
+						if (command->length > 1) {
+							command->body[--command->length] = '\0';
+						} else {
+							release_memory_block(command);
+							state = PERCENT;
+						}
+					} else if (state == PERCENT) {
 						state = NOTHING;
 					}
 					break;
+				case '\r':
+					msg_gen->body[msg_gen->length++] = '\n';
+					// msg_gen->body[msg_gen->length++] = '>';
+					// msg_gen->body[msg_gen->length++] = ' ';
+					if (state == READING) {
+						command->body[command->length] = '\0';
+						pid = registered_command_pids[command->body[0]];
+						if (pid) {
+							send_message(pid, command);
+						} else {
+							memmove(command->body + 11, command->body, command->length);
+							memcpy(command->body, "\n\rinvalid: ", 11);
+							command->length += 11;
+							send_message(CRT_PID, command);
+						}
+					}
+					state = NOTHING;
+					break;
 				default:
 					if (state == PERCENT) {
-						if (registered_command_pids[body[0]]) {
-							command = request_memory_block();
-							command->body[0] = body[0];
-							command->length = 1;
-							state = READING;
-						} else {
-							state = NOTHING;
-						}
+						command = request_memory_block();
+						command->body[0] = body[0];
+						command->length = 1;
+						state = READING;
 					} else if (state == READING) {
 						command->body[command->length++] = body[0];
 					}
@@ -308,7 +331,6 @@ void proc_KCD(void) {
 	}
 }
 
-// this func needs work!
 void proc_CRT(void) {
 	GEN_MSG *msg;
 	while (msg = receive_first_message()) {
