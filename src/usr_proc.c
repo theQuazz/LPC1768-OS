@@ -28,7 +28,7 @@ void set_test_procs() {
 	for( i = 0; i < NUM_TEST_PROCS; i++ ) {
 		g_test_procs[i].m_pid=(U32)(i+1);
 		g_test_procs[i].m_priority=LOWEST;
-		g_test_procs[i].m_stack_size=0x100;
+		g_test_procs[i].m_stack_size=0x0200;
 	}
   
 	g_test_procs[0].mpf_start_pc = &proc1;
@@ -78,7 +78,7 @@ void proc2(void)
 	struct msg_t *m = request_memory_block();
 	m->body[0] = 'a';
 	
-	delayed_send(3, m, 2000);
+	delayed_send(3, m, 50);
 
 	receive_message(0);
 }
@@ -134,7 +134,7 @@ void proc4(void) {
 
   set_process_priority(5, HIGH);
 	
-	delayed_send(TEST_4_PID, cache[0], 1000);
+	delayed_send(TEST_4_PID, cache[0], 50);
 	receive_message(TEST_4_PID);
 
   maxed_out_mem = 1;
@@ -178,11 +178,11 @@ void proc5(void) {
 
 void proc6(void)
 {
-	receive_message(NULL_PID);
+	while (1) {};
 }
 
 
-void proc_A(void) { receive_message(0); }
+void proc_A(void) { while (1) {}; }
 void proc_B(void) { receive_message(0); }
 void proc_C(void) { receive_message(0); }
 void set_process_priority_process(void) { receive_message(0); }
@@ -214,7 +214,7 @@ void wall_clock_display(void) {
 			send_message(CRT_PID, output);
 			msg = request_memory_block();
 			msg->length = -1;
-			delayed_send(WALL_CLOCK_DISPLAY_PID, msg, 1000);
+			delayed_send(WALL_CLOCK_DISPLAY_PID, msg, 10);
 		} else if (strncmp(msg->body, "WS ", 3) == 0 && msg->length == 11) {
 			release_memory_block(msg);
 			hour = atoi(msg->body + 3);
