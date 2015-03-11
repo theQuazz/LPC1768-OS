@@ -26,7 +26,7 @@ void timer_i_process ( ) {
 }
 
 void read_character(char c) {
-	KCD_MSG *m;
+	GEN_MSG *m;
 	switch (c) {
 #ifdef DEBUG_HOTKEYS
 		case '!':
@@ -44,8 +44,9 @@ void read_character(char c) {
 #endif
 		default:
 			m = k_request_memory_block();
-			m->mtype = DEFAULT;
 			m->body[0] = c;
+			m->body[1] = '\0';
+			m->length = 1;
 			k_send_message(KCD_PROCESS_PID, m);
 	}
 
@@ -54,16 +55,12 @@ void read_character(char c) {
 #endif // DEBUG_0
 }
 
-void sanity_i_process() {}
+extern volatile int buffer_pos;
+extern volatile GEN_MSG *buffer;
 
-void uart_i_process ( ) {
+void uart_i_process_ih ( ) {
 	uint8_t IIR_IntId;	    // Interrupt ID from IIR 		 
 	LPC_UART_TypeDef *pUart = (LPC_UART_TypeDef *)LPC_UART1;
-	KCD_MSG *msg = k_receive_first_message_nonblock();
-	
-	if (msg) {
-		pUart->THR = msg->body[0];
-	}
 
 	/* Reading IIR automatically acknowledges the interrupt */
 	IIR_IntId = (pUart->IIR) >> 1 ; // skip pending bit in IIR 
@@ -72,11 +69,14 @@ void uart_i_process ( ) {
 		read_character(pUart->RBR);
 	} else if (IIR_IntId & IIR_THRE) {
 		/* THRE Interrupt, transmit holding register becomes empty */
-		
-		// TODO: read next character in buffer
 
-		pUart->IER ^= IER_THRE; // toggle the IER_THRE bit 
-		pUart->THR = '\0';
+		if (buffer_pos < buffer->length) {
+			pUart->THR = buffer->body[buffer_pos++];
+		} else {
+			pUart->IER ^= IER_THRE; // toggle the IER_THRE bit 
+			buffer_pos = 0;
+			k_release_memory_block(buffer);
+		}
 	} else {  /* not implemented yet */
 #ifdef DEBUG_0
 			printf("Should not get here!\n\r");

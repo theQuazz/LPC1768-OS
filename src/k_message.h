@@ -9,7 +9,7 @@ typedef enum {
 	
 
 typedef struct msg_t {
-	U8 usr_msg[20];
+	U8 usr_msg[32];
 	struct msg_t *next;
 	struct msg_t *prev;
 	int sender_pid;

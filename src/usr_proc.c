@@ -183,7 +183,7 @@ void proc_C(void) { receive_message(0); }
 void set_process_priority_process(void) { receive_message(0); }
 
 void wall_clock_display(void) {
-	COMMAND_MSG *msg;
+	GEN_MSG *msg;
 	KCD_MSG *register_w = request_memory_block();
 
 	register_w->mtype = KCD_REG;
@@ -196,7 +196,6 @@ void wall_clock_display(void) {
 	}
 }
 
-
 enum kcd_state_t {
 	NOTHING,
 	PERCENT,
@@ -205,25 +204,27 @@ enum kcd_state_t {
 
 int registered_command_pids[128] = { 0 };
 
-// this func needs work!
 void proc_KCD(void) {
 	KCD_MSG *msg;
+	GEN_MSG *msg_gen;
 	char *body;
 	enum kcd_state_t state = NOTHING;
-	COMMAND_MSG *command;
+	GEN_MSG *command;
 
 	while (msg = receive_first_message()) {
 		// decode msg
-		body = msg->body;
 		if (msg->mtype == KCD_REG) {
 			registered_command_pids[msg->body[0]] = msg->from;
 			release_memory_block(msg);
 		} else {
+			msg_gen = ((GEN_MSG*) msg);
+			body = msg_gen->body;
 			switch (body[0]) {
 				case '%':
 					if (state == NOTHING) state = PERCENT;
 					break;
 				case '\r':
+					msg_gen->body[msg_gen->length++] = '\n';
 					if (state == READING) {
 						command->body[command->length] = '\0';
 						send_message(registered_command_pids[command->body[0]], command);
@@ -234,7 +235,8 @@ void proc_KCD(void) {
 					if (state == PERCENT) {
 						if (registered_command_pids[body[0]]) {
 							command = request_memory_block();
-							command->length = 0;
+							command->body[0] = body[0];
+							command->length = 1;
 							state = READING;
 						} else {
 							state = NOTHING;
@@ -243,7 +245,7 @@ void proc_KCD(void) {
 						command->body[command->length++] = body[0];
 					}
 			}
-			send_message(CRT_PID, msg);
+			send_message(CRT_PID, msg_gen);
 			printf("%d\r\n", state);
 		}
 	}
@@ -251,9 +253,8 @@ void proc_KCD(void) {
 
 // this func needs work!
 void proc_CRT(void) {
-	KCD_MSG *msg;
+	GEN_MSG *msg;
 	while (msg = receive_first_message()) {
-		// TODO: should we process longer strings then break them down into chars to send to the uart_i_proc?
 		send_message(UART_I_PROCESS_PID, msg);
 	}
 }

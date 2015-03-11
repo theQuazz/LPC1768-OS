@@ -40,10 +40,10 @@ typedef struct kcd_msg_t {
 	int from;
 } KCD_MSG;
 
-typedef struct command_msg_t {
-	char body[32];
+typedef struct gen_msg_t {
+	char body[24];
 	int length;
-} COMMAND_MSG;
+} GEN_MSG;
 
 typedef enum process_id {
 	NULL_PID,
@@ -111,6 +111,5 @@ extern void *_receive_first_message(U32 p_func) __SVC_0;
 extern int k_delayed_send(int, void*, int);
 #define delayed_send(pid, msg, delay) _delayed_send((U32)k_delayed_send, pid, msg, delay)
 extern int _delayed_send(U32 p_func, int pid, void *msg, int delay) __SVC_0;
-
 
 #endif /* !RTX_H_ */

@@ -17,6 +17,7 @@
 #include <system_LPC17xx.h>
 #include "uart_polling.h"
 #include "k_process.h"
+#include "uart_i_proc.h"
 
 #ifdef DEBUG_0
 #include "printf.h"
@@ -95,9 +96,9 @@ void process_init()
 	g_proc_table[TIMER_I_PROCESS_PID].m_priority = HIGH_PRIORITY; // never preempt
 
 	g_proc_table[UART_I_PROCESS_PID].m_pid = UART_I_PROCESS_PID;
-	g_proc_table[UART_I_PROCESS_PID].m_stack_size = 0x100;
-	g_proc_table[UART_I_PROCESS_PID].mpf_start_pc = NULL;
-	g_proc_table[UART_I_PROCESS_PID].m_priority = HIGH_PRIORITY; // never preempt
+	g_proc_table[UART_I_PROCESS_PID].m_stack_size = 0x200;
+	g_proc_table[UART_I_PROCESS_PID].mpf_start_pc = &uart_i_process;
+	g_proc_table[UART_I_PROCESS_PID].m_priority = LOWEST_PRIORITY; // never preempt
 
 	// usr procs
 	for ( i = 1; i <= NUM_TEST_PROCS; i++ ) {
@@ -127,6 +128,7 @@ void process_init()
 	for ( i = 0; i < NUM_TEST_PROCS; i++ ) {
 		enqueue(&gp_priority_queues[RDY].priorities[gp_pcbs[i + 1]->m_priority], gp_pcbs[i + 1]);
 	}
+	enqueue(&gp_priority_queues[RDY].priorities[gp_pcbs[UART_I_PROCESS_PID]->m_priority], gp_pcbs[UART_I_PROCESS_PID]);
 
 	gp_current_process = gp_null_process = gp_pcbs[0];
 }
@@ -255,10 +257,6 @@ int k_release_processor(void)
 	if ( gp_current_process == NULL  ) {
 		gp_current_process = gp_null_process;
 	}
-	
-	if ( gp_current_process->m_pid == 1 ) {
-		while (0) {}
-	}
 
 	process_switch(p_pcb_old);
 
@@ -277,7 +275,7 @@ void k_switch_timer_i_process(void) {
 void k_switch_uart_i_process(void) {
 	PCB *p_pcb_old = gp_current_process;
 	gp_current_process = gp_pcbs[UART_I_PROCESS_PID];
-	uart_i_process();
+	uart_i_process_ih();
 	gp_current_process = p_pcb_old;
 	k_release_processor();
 }

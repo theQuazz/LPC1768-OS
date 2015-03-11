@@ -35,6 +35,11 @@ typedef struct kcd_msg_t {
 	char body[1];
 } KCD_MSG;
 
+typedef struct gen_msg_t {
+	char body[24];
+	int length;
+} GEN_MSG;
+
 /*----- Types -----*/
 typedef unsigned char U8;
 typedef unsigned int U32;
