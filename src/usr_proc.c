@@ -301,11 +301,11 @@ void proc_KCD(void) {
 	GEN_MSG *command;
 	int pid;
 	
-	// msg_gen = request_memory_block();
-	// strcpy(msg_gen->body, "> ");
-	// msg_gen->length = 2;
-	// send_message(CRT_PID, msg_gen);
-	// msg_gen = NULL;
+	msg_gen = request_memory_block();
+	strcpy(msg_gen->body, "> ");
+	msg_gen->length = 2;
+	send_message(CRT_PID, msg_gen);
+	msg_gen = NULL;
 
 	while (msg = receive_first_message()) {
 		if (msg->mtype == KCD_REG) {
@@ -318,9 +318,7 @@ void proc_KCD(void) {
 				case '%':
 					if (state == NOTHING) state = PERCENT;
 					break;
-				case '\b':
-					msg_gen->body[msg_gen->length++] = ' ';
-					msg_gen->body[msg_gen->length++] = '\b';
+				case 127:
 					if (state == READING) {
 						if (command->length > 1) {
 							command->body[--command->length] = '\0';
@@ -330,12 +328,14 @@ void proc_KCD(void) {
 						}
 					} else if (state == PERCENT) {
 						state = NOTHING;
+					} else if (state == NOTHING) {
+						msg_gen->body[0] = '\0';
 					}
 					break;
 				case '\r':
 					msg_gen->body[msg_gen->length++] = '\n';
-					// msg_gen->body[msg_gen->length++] = '>';
-					// msg_gen->body[msg_gen->length++] = ' ';
+					msg_gen->body[msg_gen->length++] = '>';
+					msg_gen->body[msg_gen->length++] = ' ';
 					if (state == READING) {
 						command->body[command->length] = '\0';
 						pid = registered_command_pids[command->body[0]];
