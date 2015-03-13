@@ -186,11 +186,65 @@ void proc6(void) {
 
 
 void proc_A(void) {
-	while (1) {}
+	GEN_MSG *p;
+	KCD_MSG *q;
+	KCD_MSG *register_z = request_memory_block();
+	int num = 0;
+
+	while (1) {
+		p = receive_first_message();
+		if (p->body[0] == 'Z') {
+			release_memory_block(p);
+			break;
+		} else {
+			release_memory_block(p);
+		}
+	}
+	
+	while (1) {
+		q = request_memory_block();
+		q->mtype = COUNT_REPORT;
+		q->body[0] = num;
+		send_message(B_PID, q);
+		num++;
+		release_processor();
+	}
 }
 
-void proc_B(void) { receive_message(0); }
-void proc_C(void) { receive_message(0); }
+void proc_B(void) {
+	while (1) {
+		send_message(C_PID, receive_message(A_PID));
+	}
+}
+void proc_C(void) {
+	KCD_MSG *q;
+
+	while (1) {
+		if (!q->first) {
+			p = receive_message(B_PID);
+		} else {
+			p = dequeue();
+		}
+		if (p->mtype == COUNT_REPORT) {
+			if (p->body[0] % 20 == 0) {
+				strcpy(p->body, "Process C\r\n");
+				q = request_memory_block();
+				q->mtype = WAKEUP_10;
+				send_message(C_PID, q);
+				while (1) {
+					p = receive_first_message();
+					if (p->mtype == WAKEUP_10) {
+						break;
+					} else {
+						enqueue();
+					}
+				}
+			}
+		}
+		release_memory_block(p);
+		release_processor();
+	}
+}
 
 void set_process_priority_process(void) {
 	KCD_MSG *register_c = request_memory_block();

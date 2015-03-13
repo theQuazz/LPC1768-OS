@@ -18,6 +18,8 @@
 /* Message types */
 #define DEFAULT 0
 #define KCD_REG 1
+#define COUNT_REPORT 2
+#define WAKEUP_10 3
 
 #define TIMER_I_PROCESS_PID 14
 #define UART_I_PROCESS_PID 15
