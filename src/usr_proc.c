@@ -30,7 +30,7 @@ void set_test_procs() {
 		g_test_procs[i].m_priority=LOWEST;
 		g_test_procs[i].m_stack_size=0x0200;
 	}
-  
+
 	g_test_procs[0].mpf_start_pc = &proc1;
 	g_test_procs[1].mpf_start_pc = &proc2;
 	g_test_procs[2].mpf_start_pc = &proc3;
@@ -56,30 +56,30 @@ void proc1(void)
 #ifdef DEBUG_0
 	printf("G019_test: START\r\n");
 #endif
-	
+
 	release_memory_block(receive_message(TEST_5_PID));
 	release_memory_block(receive_message(TEST_3_PID));
-	
+
 #ifdef DEBUG_0
 	printf("G019_test: %d/%d tests OK\r\n", num_tests_passed, num_tests);
 	printf("G019_test: %d/%d tests FAIL\r\n", num_tests_failed, num_tests);
 	printf("G019_test: END\r\n");
 #endif
-	
+
 	receive_message(0);
 }
 
 struct msg_t {
 	char body[1];
 };
-	
+
 void proc2(void)
 {
 	struct msg_t *m = request_memory_block();
 	m->body[0] = 'a';
-	
+
 	release_memory_block(receive_message(TEST_5_PID));
-	
+
 	delayed_send(3, m, 1000);
 
 	receive_message(0);
@@ -100,7 +100,7 @@ void proc3(void) {
 	release_memory_block(m);
 #endif
 	send_message(1, request_memory_block());
-	
+
 	receive_message(0);
 }
 
@@ -136,7 +136,7 @@ void proc4(void) {
   }
 
   set_process_priority(5, HIGH);
-	
+
 	delayed_send(TEST_4_PID, cache[0], 2000);
 	receive_message(TEST_4_PID);
 
@@ -200,7 +200,7 @@ void proc_A(void) {
 			release_memory_block(p);
 		}
 	}
-	
+
 	while (1) {
 		q = request_memory_block();
 		q->mtype = COUNT_REPORT;
@@ -216,14 +216,49 @@ void proc_B(void) {
 		send_message(C_PID, receive_message(A_PID));
 	}
 }
+
+typedef struct Queue {
+	struct Item *first;
+	struct Item *last;
+} QUEUE;
+
+typedef struct Item {
+	struct Item *next;
+	struct Item *prev;
+	void *data;
+} ITEM;
+
+void Queue_enque(struct Queue *q, void *something) {
+	struct Item *item = request_memory_block();
+	item->data = something;
+  if (!q->last) q->last = item;
+  if (q->first) q->first->prev = item;
+  item->next = q->first;
+  item->prev = NULL;
+  q->first = item;
+};
+
+void *Queue_dequeue(struct Queue *q) {
+	void *data;
+  struct Item *tmp = q->last;
+  if (!tmp) return NULL;
+  q->last = tmp->prev;
+  if (q->last) q->last->next = NULL;
+	if (q->first == tmp) q->first = NULL;
+	data = tmp->data;
+	release_memory_block(tmp);
+  return data;
+}
+
 void proc_C(void) {
 	KCD_MSG *q;
+	QUEUE msg_queue = { .first = NULL, .last = NULL };
 
 	while (1) {
 		if (!q->first) {
 			p = receive_message(B_PID);
 		} else {
-			p = dequeue();
+			p = Queue_dequeue(q);
 		}
 		if (p->mtype == COUNT_REPORT) {
 			if (p->body[0] % 20 == 0) {
@@ -236,7 +271,7 @@ void proc_C(void) {
 					if (p->mtype == WAKEUP_10) {
 						break;
 					} else {
-						enqueue();
+						Queue_enque(q, p);
 					}
 				}
 			}
@@ -293,7 +328,7 @@ void wall_clock_display(void) {
 	register_w->body[0] = 'W';
 	register_w->from = WALL_CLOCK_DISPLAY_PID;
 	send_message(KCD_PID, register_w);
-	
+
 	while (msg = receive_first_message()) {
 		if (msg->length == -1) {
 			if (!running) continue;
@@ -354,7 +389,7 @@ void proc_KCD(void) {
 	enum kcd_state_t state = NOTHING;
 	GEN_MSG *command;
 	int pid;
-	
+
 	msg_gen = request_memory_block();
 	strcpy(msg_gen->body, "> ");
 	msg_gen->length = 2;
