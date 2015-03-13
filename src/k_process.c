@@ -216,25 +216,6 @@ int process_switch(PCB *p_pcb_old)
 	}
 	return RTX_OK;
 }
-
-void k_print_queue(PROC_STATE_E state) {
-	int i;
-	PriorityQueue *pq = &gp_priority_queues[state];
-	PCBQueue *q;
-	PCB *it;
-	printf(" priority | process ids\r\n");
-	printf("-----------------------------------------------\r\n");
-	for (i = 0; i < NUM_PRIORITIES; i++) {
-		q = &(pq->priorities[i]);
-		printf("        %d | ", i);
-		it = q->first;
-		while (it) {
-			printf("%d ", it->m_pid);
-			it = it->next;
-		}
-		printf("\n\r");
-	}
-}
 /**
  * @brief release_processor(). 
  * @return RTX_ERR on error and zero on success
@@ -395,4 +376,31 @@ int k_get_process_priority(int pid) {
 	}
 
 	return gp_pcbs[pid]->m_priority;
+}
+
+void k_print_queue(PROC_STATE_E state) {
+	PriorityQueue *pq = &gp_priority_queues[state];
+	PCBQueue *q;
+	PCB *it;
+	int i;
+
+	__disable_irq();
+
+	printf(" priority | process ids\r\n");
+	printf("----------+------------------------------------\r\n");
+
+	for (i = 0; i < NUM_PRIORITIES; i++) {
+		q = &(pq->priorities[i]);
+		printf("        %d | ", i);
+		it = q->first;
+		while (it) {
+			printf("%d ", it->m_pid);
+			it = it->next;
+		}
+		printf("\n\r");
+	}
+
+	printf("\n\r");
+	
+	__enable_irq();
 }

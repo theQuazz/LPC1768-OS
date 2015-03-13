@@ -28,7 +28,7 @@ void set_test_procs() {
 	for( i = 0; i < NUM_TEST_PROCS; i++ ) {
 		g_test_procs[i].m_pid=(U32)(i+1);
 		g_test_procs[i].m_priority=LOWEST;
-		g_test_procs[i].m_stack_size=0x100;
+		g_test_procs[i].m_stack_size=0x0200;
 	}
   
 	g_test_procs[0].mpf_start_pc = &proc1;
@@ -57,8 +57,8 @@ void proc1(void)
 	printf("G019_test: START\r\n");
 #endif
 	
-	release_memory_block(receive_message(5));
-	release_memory_block(receive_message(3));
+	release_memory_block(receive_message(TEST_5_PID));
+	release_memory_block(receive_message(TEST_3_PID));
 	
 #ifdef DEBUG_0
 	printf("G019_test: %d/%d tests OK\r\n", num_tests_passed, num_tests);
@@ -78,7 +78,9 @@ void proc2(void)
 	struct msg_t *m = request_memory_block();
 	m->body[0] = 'a';
 	
-	delayed_send(3, m, 2000);
+	release_memory_block(receive_message(TEST_5_PID));
+	
+	delayed_send(3, m, 1000);
 
 	receive_message(0);
 }
@@ -95,6 +97,7 @@ void proc3(void) {
     printf("G019_test: test %d FAIL\r\n", 2);
     num_tests_failed++;
   }
+	release_memory_block(m);
 #endif
 	send_message(1, request_memory_block());
 	
@@ -134,7 +137,7 @@ void proc4(void) {
 
   set_process_priority(5, HIGH);
 	
-	delayed_send(TEST_4_PID, cache[0], 1000);
+	delayed_send(TEST_4_PID, cache[0], 2000);
 	receive_message(TEST_4_PID);
 
   maxed_out_mem = 1;
@@ -171,21 +174,58 @@ void proc5(void) {
     num_tests_passed++;
   }
 #endif
-	send_message(1, request_memory_block());
+	send_message(TEST_1_PID, request_memory_block());
+	send_message(TEST_2_PID, request_memory_block());
 
 	receive_message(0);;
 }
 
-void proc6(void)
-{
-	receive_message(NULL_PID);
+void proc6(void) {
+	while (1) {}
 }
 
 
-void proc_A(void) { receive_message(0); }
+void proc_A(void) {
+	while (1) {}
+}
+
 void proc_B(void) { receive_message(0); }
 void proc_C(void) { receive_message(0); }
-void set_process_priority_process(void) { receive_message(0); }
+
+void set_process_priority_process(void) {
+	KCD_MSG *register_c = request_memory_block();
+	GEN_MSG *msg;
+	char *pos;
+	int pid, prio;
+	int err;
+
+	register_c->mtype = KCD_REG;
+	register_c->body[0] = 'C';
+	register_c->from = SET_PROCESS_PRIORITY_PID;
+	send_message(KCD_PID, register_c);
+
+	while (msg = receive_message(KCD_PID)) {
+		pos = memchr(msg->body, ' ', msg->length);
+		pos = strtok(pos, " ");
+		if (pos == NULL) goto set_process_priority_error;
+		pid = atoi(pos);
+		pos = strtok(NULL, " ");
+		if (pos == NULL) goto set_process_priority_error;
+		prio = atoi(pos);
+		release_memory_block(msg);
+		err = set_process_priority(pid, prio);
+		if (err == RTX_ERR) {
+			msg = request_memory_block();
+			strcpy(msg->body, "Invalid pid/priority\n\r");
+			msg->length = strlen("Invalid pid/priority\n\r");
+			send_message(CRT_PID, msg);
+		}
+		continue;
+	set_process_priority_error:
+		release_memory_block(msg);
+		printf("set_process_priority_error\r\n");
+	}
+}
 
 void wall_clock_display(void) {
 	GEN_MSG *msg;
@@ -259,6 +299,13 @@ void proc_KCD(void) {
 	char *body;
 	enum kcd_state_t state = NOTHING;
 	GEN_MSG *command;
+	int pid;
+	
+	// msg_gen = request_memory_block();
+	// strcpy(msg_gen->body, "> ");
+	// msg_gen->length = 2;
+	// send_message(CRT_PID, msg_gen);
+	// msg_gen = NULL;
 
 	while (msg = receive_first_message()) {
 		if (msg->mtype == KCD_REG) {
@@ -271,24 +318,44 @@ void proc_KCD(void) {
 				case '%':
 					if (state == NOTHING) state = PERCENT;
 					break;
-				case '\r':
-					msg_gen->body[msg_gen->length++] = '\n';
+				case '\b':
+					msg_gen->body[msg_gen->length++] = ' ';
+					msg_gen->body[msg_gen->length++] = '\b';
 					if (state == READING) {
-						command->body[command->length] = '\0';
-						send_message(registered_command_pids[command->body[0]], command);
+						if (command->length > 1) {
+							command->body[--command->length] = '\0';
+						} else {
+							release_memory_block(command);
+							state = PERCENT;
+						}
+					} else if (state == PERCENT) {
 						state = NOTHING;
 					}
 					break;
+				case '\r':
+					msg_gen->body[msg_gen->length++] = '\n';
+					// msg_gen->body[msg_gen->length++] = '>';
+					// msg_gen->body[msg_gen->length++] = ' ';
+					if (state == READING) {
+						command->body[command->length] = '\0';
+						pid = registered_command_pids[command->body[0]];
+						if (pid) {
+							send_message(pid, command);
+						} else {
+							memmove(command->body + 11, command->body, command->length);
+							memcpy(command->body, "\n\rinvalid: ", 11);
+							command->length += 11;
+							send_message(CRT_PID, command);
+						}
+					}
+					state = NOTHING;
+					break;
 				default:
 					if (state == PERCENT) {
-						if (registered_command_pids[body[0]]) {
-							command = request_memory_block();
-							command->body[0] = body[0];
-							command->length = 1;
-							state = READING;
-						} else {
-							state = NOTHING;
-						}
+						command = request_memory_block();
+						command->body[0] = body[0];
+						command->length = 1;
+						state = READING;
 					} else if (state == READING) {
 						command->body[command->length++] = body[0];
 					}
@@ -298,7 +365,6 @@ void proc_KCD(void) {
 	}
 }
 
-// this func needs work!
 void proc_CRT(void) {
 	GEN_MSG *msg;
 	while (msg = receive_first_message()) {
