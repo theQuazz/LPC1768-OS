@@ -80,7 +80,7 @@ void proc2(void)
 
 	release_memory_block(receive_message(TEST_5_PID));
 
-	delayed_send(3, m, 1000);
+	delayed_send(3, m, 20);
 
 	receive_message(0);
 }
@@ -137,7 +137,7 @@ void proc4(void) {
 
   set_process_priority(5, HIGH);
 
-	delayed_send(TEST_4_PID, cache[0], 2000);
+	delayed_send(TEST_4_PID, cache[0], 50);
 	receive_message(TEST_4_PID);
 
   maxed_out_mem = 1;
@@ -190,6 +190,11 @@ void proc_A(void) {
 	KCD_MSG *q;
 	KCD_MSG *register_z = request_memory_block();
 	int num = 0;
+
+	register_z->mtype = KCD_REG;
+	register_z->body[0] = 'Z';
+	register_z->from = A_PID;
+	send_message(KCD_PID, register_z);
 
 	while (1) {
 		p = receive_first_message();
@@ -251,27 +256,31 @@ void *Queue_dequeue(struct Queue *q) {
 }
 
 void proc_C(void) {
-	KCD_MSG *q;
-	QUEUE msg_queue = { .first = NULL, .last = NULL };
+	KCD_MSG *p;
+	GEN_MSG *g;
+	QUEUE q = { NULL, NULL };
 
 	while (1) {
-		if (!q->first) {
+		if (!q.first) {
 			p = receive_message(B_PID);
 		} else {
-			p = Queue_dequeue(q);
+			p = Queue_dequeue(&q);
 		}
 		if (p->mtype == COUNT_REPORT) {
 			if (p->body[0] % 20 == 0) {
-				strcpy(p->body, "Process C\r\n");
-				q = request_memory_block();
-				q->mtype = WAKEUP_10;
-				send_message(C_PID, q);
+				g = (void *)p;
+				strcpy(g->body, "Process C\r\n");
+				g->length = strlen("Process C\r\n");
+				send_message(CRT_PID, g);
+				p = request_memory_block();
+				p->mtype = WAKEUP_10;
+				delayed_send(C_PID, p, 10000);
 				while (1) {
 					p = receive_first_message();
 					if (p->mtype == WAKEUP_10) {
 						break;
 					} else {
-						Queue_enque(q, p);
+						Queue_enque(&q, p);
 					}
 				}
 			}
@@ -303,16 +312,14 @@ void set_process_priority_process(void) {
 		prio = atoi(pos);
 		release_memory_block(msg);
 		err = set_process_priority(pid, prio);
-		if (err == RTX_ERR) {
-			msg = request_memory_block();
-			strcpy(msg->body, "Invalid pid/priority\n\r");
-			msg->length = strlen("Invalid pid/priority\n\r");
-			send_message(CRT_PID, msg);
-		}
+		if (err == RTX_ERR) goto set_process_priority_error;
 		continue;
 	set_process_priority_error:
 		release_memory_block(msg);
-		printf("set_process_priority_error\r\n");
+		msg = request_memory_block();
+		strcpy(msg->body, "Invalid pid/priority\n\r");
+		msg->length = strlen("Invalid pid/priority\n\r");
+		send_message(CRT_PID, msg);
 	}
 }
 
