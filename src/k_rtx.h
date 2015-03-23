@@ -1,3 +1,4 @@
+
 /** 
  * @file:   k_rtx.h
  * @brief:  kernel deinitiation and data structure header file
@@ -17,7 +18,7 @@
 #define NUM_TEST_PROCS 13
 #define NUM_SYS_PROCS  2
 #define NUM_PROCS      NUM_TEST_PROCS + NUM_SYS_PROCS + 1
-#define NUM_PRIORITIES 4
+#define NUM_PRIORITIES 4	
 #define KCD_PROCESS_PID 12
 #define CRT_PROCESS_PID 13
 #define TIMER_I_PROCESS_PID 14

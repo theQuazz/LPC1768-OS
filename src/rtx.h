@@ -40,6 +40,8 @@ typedef struct kcd_msg_t {
 	int mtype;
 	char body[1];
 	int from;
+	struct kcd_msg_t *next;
+	struct kcd_msg_t *prev;
 } KCD_MSG;
 
 typedef struct gen_msg_t {

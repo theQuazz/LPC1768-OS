@@ -223,19 +223,11 @@ void proc_B(void) {
 }
 
 typedef struct Queue {
-	struct Item *first;
-	struct Item *last;
+	KCD_MSG *first;
+	KCD_MSG *last;
 } QUEUE;
 
-typedef struct Item {
-	struct Item *next;
-	struct Item *prev;
-	void *data;
-} ITEM;
-
-void Queue_enque(struct Queue *q, void *something) {
-	struct Item *item = request_memory_block();
-	item->data = something;
+void Queue_enque(struct Queue *q, KCD_MSG *item) {
   if (!q->last) q->last = item;
   if (q->first) q->first->prev = item;
   item->next = q->first;
@@ -243,16 +235,13 @@ void Queue_enque(struct Queue *q, void *something) {
   q->first = item;
 };
 
-void *Queue_dequeue(struct Queue *q) {
-	void *data;
-  struct Item *tmp = q->last;
+KCD_MSG *Queue_dequeue(struct Queue *q) {
+  KCD_MSG *tmp = q->last;
   if (!tmp) return NULL;
   q->last = tmp->prev;
   if (q->last) q->last->next = NULL;
 	if (q->first == tmp) q->first = NULL;
-	data = tmp->data;
-	release_memory_block(tmp);
-  return data;
+  return tmp;
 }
 
 void proc_C(void) {
