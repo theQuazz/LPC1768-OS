@@ -25,7 +25,7 @@ typedef struct message_queue {
 
 int k_send_message(int, void*);
 int k_delayed_send(int, void *, int);
-void *k_receive_message(int);
+void *k_receive_message(int*);
 void *k_receive_first_message(void);
 void *k_receive_message_noblock(int);
 void *k_receive_first_message_nonblock(void);

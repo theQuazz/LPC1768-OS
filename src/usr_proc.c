@@ -16,6 +16,23 @@
 #include "printf.h"
 #endif /* DEBUG_0 */
 
+int NULL_PID                 = E_NULL_PID;
+int TEST_1_PID               = E_TEST_1_PID;
+int TEST_2_PID               = E_TEST_2_PID;
+int TEST_3_PID               = E_TEST_3_PID;
+int TEST_4_PID               = E_TEST_4_PID;
+int TEST_5_PID               = E_TEST_5_PID;
+int TEST_6_PID               = E_TEST_6_PID;
+int A_PID                    = E_A_PID;
+int B_PID                    = E_B_PID;
+int C_PID                    = E_C_PID;
+int SET_PROCESS_PRIORITY_PID = E_SET_PROCESS_PRIORITY_PID;
+int WALL_CLOCK_DISPLAY_PID   = E_WALL_CLOCK_DISPLAY_PID;
+int KCD_PID                  = E_KCD_PID;
+int CRT_PID                  = E_CRT_PID;
+int TIMER_PID                = E_TIMER_PID;
+int UART_PID                 = E_UART_PID;
+
 int num_tests = 0;
 int num_tests_passed = 0;
 int num_tests_failed = 0;
@@ -46,19 +63,19 @@ void set_test_procs() {
 	g_test_procs[12].mpf_start_pc = &proc_CRT;
 }
 
-
 /**
  * @brief: a process that prints five uppercase letters
  *         and then yields the cpu.
  */
 void proc1(void)
 {
+	
 #ifdef DEBUG_0
 	printf("G019_test: START\r\n");
 #endif
 
-	release_memory_block(receive_message(TEST_5_PID));
-	release_memory_block(receive_message(TEST_3_PID));
+	release_memory_block(receive_message(&TEST_5_PID));
+	release_memory_block(receive_message(&TEST_3_PID));
 
 #ifdef DEBUG_0
 	printf("G019_test: %d/%d tests OK\r\n", num_tests_passed, num_tests);
@@ -78,7 +95,7 @@ void proc2(void)
 	struct msg_t *m = request_memory_block();
 	m->body[0] = 'a';
 
-	release_memory_block(receive_message(TEST_5_PID));
+	release_memory_block(receive_message(&TEST_5_PID));
 
 	delayed_send(3, m, 20);
 
@@ -86,7 +103,7 @@ void proc2(void)
 }
 
 void proc3(void) {
-	struct msg_t *m = receive_message(2);
+	struct msg_t *m = receive_message(&TEST_2_PID);
 
 #ifdef DEBUG_0
   num_tests++;
@@ -138,7 +155,7 @@ void proc4(void) {
   set_process_priority(5, HIGH);
 
 	delayed_send(TEST_4_PID, cache[0], 50);
-	receive_message(TEST_4_PID);
+	receive_message(&TEST_4_PID);
 
   maxed_out_mem = 1;
 
@@ -218,7 +235,7 @@ void proc_A(void) {
 
 void proc_B(void) {
 	while (1) {
-		send_message(C_PID, receive_message(A_PID));
+		send_message(C_PID, receive_message(&A_PID));
 	}
 }
 
@@ -251,7 +268,7 @@ void proc_C(void) {
 
 	while (1) {
 		if (!q.first) {
-			p = receive_message(B_PID);
+			p = receive_message(&B_PID);
 		} else {
 			p = Queue_dequeue(&q);
 		}
@@ -291,7 +308,7 @@ void set_process_priority_process(void) {
 	register_c->from = SET_PROCESS_PRIORITY_PID;
 	send_message(KCD_PID, register_c);
 
-	while (msg = receive_message(KCD_PID)) {
+	while (msg = receive_message(&KCD_PID)) {
 		pos = memchr(msg->body, ' ', msg->length);
 		pos = strtok(pos, " ");
 		if (pos == NULL) goto set_process_priority_error;
@@ -299,13 +316,11 @@ void set_process_priority_process(void) {
 		pos = strtok(NULL, " ");
 		if (pos == NULL) goto set_process_priority_error;
 		prio = atoi(pos);
-		release_memory_block(msg);
 		err = set_process_priority(pid, prio);
 		if (err == RTX_ERR) goto set_process_priority_error;
+		release_memory_block(msg);
 		continue;
 	set_process_priority_error:
-		release_memory_block(msg);
-		msg = request_memory_block();
 		strcpy(msg->body, "Invalid pid/priority\n\r");
 		msg->length = strlen("Invalid pid/priority\n\r");
 		send_message(CRT_PID, msg);
@@ -422,6 +437,7 @@ void proc_KCD(void) {
 					}
 					break;
 				case '\r':
+					allowance = 0;
 					msg_gen->body[msg_gen->length++] = '\n';
 					msg_gen->body[msg_gen->length++] = '>';
 					msg_gen->body[msg_gen->length++] = ' ';

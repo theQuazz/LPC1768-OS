@@ -69,13 +69,13 @@ int k_send_message(int pid, void *envelope) {
 	return 0;
 }
 
-void *k_receive_message(int pid) {
+void *k_receive_message(int *pid) {
 	int curr = k_get_current_pid();
 	MSG *msg;
 	
 	__disable_irq();
 	
-	while ((msg = msg_queue_remove(&process_message_queues[curr], message_pid_predicate, &pid)) == NULL) {
+	while ((msg = msg_queue_remove(&process_message_queues[curr], message_pid_predicate, pid)) == NULL) {
 		k_block_current_process(BLK_MSG);
 	}
 	

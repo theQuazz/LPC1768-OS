@@ -50,22 +50,22 @@ typedef struct gen_msg_t {
 } GEN_MSG;
 
 typedef enum process_id {
-	NULL_PID,
-	TEST_1_PID,
-	TEST_2_PID,
-	TEST_3_PID,
-	TEST_4_PID,
-	TEST_5_PID,
-	TEST_6_PID,
-	A_PID,
-	B_PID,
-	C_PID,
-	SET_PROCESS_PRIORITY_PID,
-	WALL_CLOCK_DISPLAY_PID,
-	KCD_PID,
-	CRT_PID,
-	TIMER_PID,
-	UART_PID
+	E_NULL_PID,
+	E_TEST_1_PID,
+	E_TEST_2_PID,
+	E_TEST_3_PID,
+	E_TEST_4_PID,
+	E_TEST_5_PID,
+	E_TEST_6_PID,
+	E_A_PID,
+	E_B_PID,
+	E_C_PID,
+	E_SET_PROCESS_PRIORITY_PID,
+	E_WALL_CLOCK_DISPLAY_PID,
+	E_KCD_PID,
+	E_CRT_PID,
+	E_TIMER_PID,
+	E_UART_PID
 } PROCESS_ID;
 
 /* ----- RTX User API ----- */
@@ -100,9 +100,9 @@ extern int k_send_message(int, void*);
 #define send_message(pid, msg) _send_message((U32)k_send_message, pid, msg)
 extern int _send_message(U32 p_func, int pid, void *msg) __SVC_0;
 
-extern void *k_receive_message(int);
+extern void *k_receive_message(int*);
 #define receive_message(pid) _receive_message((U32)k_receive_message, pid)
-extern void *_receive_message(U32 p_func, int pid) __SVC_0;
+extern void *_receive_message(U32 p_func, int *pid) __SVC_0;
 
 extern void *k_receive_first_message_nonblock(void);
 #define receive_first_message_nonblock() _receive_first_message_nonblock((U32)k_recieve_first_message_nonblock)

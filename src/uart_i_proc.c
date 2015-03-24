@@ -12,9 +12,9 @@ void uart_i_process() {
 	
 	while (msg = receive_first_message()) {
 		while (buffer_pos != 0) {}
-		pUart->IER ^= IER_THRE;
 		buffer = msg;
 		buffer_pos = 1;
 		pUart->THR = buffer->body[0];
+		pUart->IER ^= IER_THRE;
 	}
 }

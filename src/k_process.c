@@ -329,7 +329,7 @@ int k_get_current_pid(){
  * @brief k_set_process_priority
  */
 int k_set_process_priority(int pid, int priority) {
-	PCB *p = gp_pcbs[pid];
+	PCB *p;
 	int state;
 
   if (pid == 0 && priority == NULL_PROIRITY) {
@@ -337,12 +337,10 @@ int k_set_process_priority(int pid, int priority) {
   }
 	
 	if (!( 0 < pid && pid < NUM_PROCS && HIGH_PRIORITY <= priority && priority <= LOWEST_PRIORITY )) {
-#ifdef DEBUG_0
-		printf("somethin ain't right, trying to set_process_priority(%d, %d)\r\n", pid, priority);
-#endif
 		return RTX_ERR;
 	}
 
+	p = gp_pcbs[pid];
 	state = p->m_state;
 	
 	// if state is the NEW state it is in the RDY queue
@@ -369,9 +367,6 @@ int k_set_process_priority(int pid, int priority) {
  */
 int k_get_process_priority(int pid) {
 	if (!( 0 <= pid && pid < NUM_PROCS )) {
-#ifdef DEBUG_0
-		printf("somethin ain't right, trying to get_process_priority(%d)\r\n", pid);
-#endif
 		return RTX_ERR;
 	}
 
