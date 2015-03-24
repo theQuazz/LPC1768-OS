@@ -381,10 +381,10 @@ int registered_command_pids[128] = { 0 };
 void proc_KCD(void) {
 	KCD_MSG *msg;
 	GEN_MSG *msg_gen;
-	char *body;
 	enum kcd_state_t state = NOTHING;
 	GEN_MSG *command;
 	int pid;
+	int allowance = 0;
 
 	msg_gen = request_memory_block();
 	strcpy(msg_gen->body, "> ");
@@ -398,12 +398,13 @@ void proc_KCD(void) {
 			release_memory_block(msg);
 		} else {
 			msg_gen = ((GEN_MSG*) msg);
-			body = msg_gen->body;
-			switch (body[0]) {
-				case '%':
-					if (state == NOTHING) state = PERCENT;
-					break;
+			switch (msg_gen->body[0]) {
 				case 127:
+				case '\b':
+					msg_gen->body[msg_gen->length - 1] = '\b';
+					msg_gen->body[msg_gen->length++]   = ' ';
+					msg_gen->body[msg_gen->length++]   = '\b';
+					msg_gen->body[msg_gen->length]   = '\0';
 					if (state == READING) {
 						if (command->length > 1) {
 							command->body[--command->length] = '\0';
@@ -413,8 +414,11 @@ void proc_KCD(void) {
 						}
 					} else if (state == PERCENT) {
 						state = NOTHING;
-					} else if (state == NOTHING) {
+					} else if (state == NOTHING && allowance == 0) {
 						msg_gen->body[0] = '\0';
+						msg_gen->length  = 0;
+					} else {
+						allowance--;
 					}
 					break;
 				case '\r':
@@ -435,14 +439,21 @@ void proc_KCD(void) {
 					}
 					state = NOTHING;
 					break;
+				case '%':
+					if (state == NOTHING) {
+						state = PERCENT;
+						break;
+					}
 				default:
 					if (state == PERCENT) {
 						command = request_memory_block();
-						command->body[0] = body[0];
+						command->body[0] = msg_gen->body[0];
 						command->length = 1;
 						state = READING;
 					} else if (state == READING) {
-						command->body[command->length++] = body[0];
+						command->body[command->length++] = msg_gen->body[0];
+					} else {
+						allowance++;
 					}
 			}
 			send_message(CRT_PID, msg_gen);
