@@ -91,14 +91,14 @@ void process_init()
 	g_proc_table[0].m_priority = NUM_PRIORITIES;
 
 	g_proc_table[TIMER_I_PROCESS_PID].m_pid = TIMER_I_PROCESS_PID;
-	g_proc_table[TIMER_I_PROCESS_PID].m_stack_size = 0x100;
+	g_proc_table[TIMER_I_PROCESS_PID].m_stack_size = 0x200;
 	g_proc_table[TIMER_I_PROCESS_PID].mpf_start_pc = NULL;
 	g_proc_table[TIMER_I_PROCESS_PID].m_priority = HIGH_PRIORITY; // never preempt
 
 	g_proc_table[UART_I_PROCESS_PID].m_pid = UART_I_PROCESS_PID;
-	g_proc_table[UART_I_PROCESS_PID].m_stack_size = 0x200;
+	g_proc_table[UART_I_PROCESS_PID].m_stack_size = 0x400;
 	g_proc_table[UART_I_PROCESS_PID].mpf_start_pc = &uart_i_process;
-	g_proc_table[UART_I_PROCESS_PID].m_priority = LOWEST_PRIORITY; // never preempt
+	g_proc_table[UART_I_PROCESS_PID].m_priority = HIGH_PRIORITY; // never preempt
 
 	// usr procs
 	for ( i = 1; i <= NUM_TEST_PROCS; i++ ) {

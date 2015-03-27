@@ -78,7 +78,8 @@ void heap_init(void) {
 	MEM_BLK *mem;
 
 	/* allocate memory for heap, not implemented yet*/
-	num_blks = ((U8 *)gp_stack - (U8 *)first_free_blk) / sizeof(MEM_BLK) - 1;
+// 	num_blks = ((U8 *)gp_stack - (U8 *)first_free_blk) / sizeof(MEM_BLK) - 1;
+	num_blks = 30;
   mem = first_free_blk;
 
   for (i = 0; i < num_blks - 1; i++) {

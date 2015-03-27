@@ -47,6 +47,14 @@ void set_test_procs() {
 		g_test_procs[i].m_priority=LOWEST;
 		g_test_procs[i].m_stack_size=0x0200;
 	}
+	
+ 	g_test_procs[6].m_priority = LOW;
+ 	g_test_procs[7].m_priority = MEDIUM;
+ 	g_test_procs[8].m_priority = HIGH;
+	
+	g_test_procs[10].m_priority = HIGH;
+	g_test_procs[11].m_priority = HIGH;
+	g_test_procs[12].m_priority = HIGH;
 
 	g_test_procs[0].mpf_start_pc = &proc1;
 	g_test_procs[1].mpf_start_pc = &proc2;
@@ -73,6 +81,8 @@ void proc1(void)
 #ifdef DEBUG_0
 	printf("G019_test: START\r\n");
 #endif
+	
+	set_process_priority(UART_I_PROCESS_PID, HIGH);
 
 	release_memory_block(receive_message(&TEST_5_PID));
 	release_memory_block(receive_message(&TEST_3_PID));
