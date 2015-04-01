@@ -4,6 +4,7 @@
  */
 #ifndef RTX_H_
 #define RTX_H_
+#include <stdint.h>
 
 /* ----- Definitations ----- */
 #define RTX_ERR -1
@@ -115,5 +116,13 @@ extern void *_receive_first_message(U32 p_func) __SVC_0;
 extern int k_delayed_send(int, void*, int);
 #define delayed_send(pid, msg, delay) _delayed_send((U32)k_delayed_send, pid, msg, delay)
 extern int _delayed_send(U32 p_func, int pid, void *msg, int delay) __SVC_0;
+
+extern void k_timer_start(void);
+#define timer_start(void) _timer_start((U32)k_timer_start)
+extern int _timer_start(U32 p_func) __SVC_0;
+
+extern uint32_t k_timer_end(void);
+#define timer_end(void) _timer_end((U32)k_timer_end)
+extern int _timer_end(U32 p_func) __SVC_0;
 
 #endif /* !RTX_H_ */

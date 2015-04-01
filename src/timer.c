@@ -12,6 +12,8 @@
 #define BIT(X) (1<<X)
 
 volatile uint32_t g_timer_count = 0; // increment every 1 ms
+volatile uint32_t g_10us_timer_count = 0; // increment every 10 us
+volatile uint32_t timer = 0;
 
 /**
 * @brief: initialize timer. Only timer 0 is supported
@@ -49,8 +51,21 @@ uint32_t timer_init(uint8_t n_timer)
         -----------------------------------------------------
         */
         pTimer = (LPC_TIM_TypeDef *) LPC_TIM0;
+				/* Step 4.1: Prescale Register PR setting
+				CCLK = 100 MHZ, PCLK = CCLK/4 = 25 MHZ
+				2*(12499 + 1)*(1/25) * 10^(-6) s = 10^(-3) s = 1 ms
+				TC (Timer Counter) toggles b/w 0 and 1 every 12500 PCLKs
+				see MR setting below
+				*/
+				pTimer->PR = 12499;
+				g_timer_count = 0;
+				NVIC_EnableIRQ(TIMER0_IRQn);
     } else { /* other timer not supported yet */
-        return 1;
+        pTimer = (LPC_TIM_TypeDef *) LPC_TIM1;
+				g_10us_timer_count = 0;
+				// 2*(11 + 1)*(1/25) * 10^(-6) s = 0.96^(-6) s = 0.96 us
+				pTimer->PR = 11;
+				NVIC_EnableIRQ(TIMER1_IRQn);
     }
 
     /*
@@ -58,13 +73,6 @@ uint32_t timer_init(uint8_t n_timer)
     Step 4: Interrupts configuration
     -----------------------------------------------------
     */
-    /* Step 4.1: Prescale Register PR setting
-    CCLK = 100 MHZ, PCLK = CCLK/4 = 25 MHZ
-    2*(12499 + 1)*(1/25) * 10^(-6) s = 10^(-3) s = 1 ms
-    TC (Timer Counter) toggles b/w 0 and 1 every 12500 PCLKs
-    see MR setting below
-    */
-    pTimer->PR = 12499;
     /* Step 4.2: MR setting, see section 21.6.7 on pg496 of LPC17xx_UM. */
     pTimer->MR0 = 1;
     /* Step 4.3: MCR setting, see table 429 on pg496 of LPC17xx_UM.
@@ -73,9 +81,7 @@ uint32_t timer_init(uint8_t n_timer)
     Reset on MR0: Reset TC if MR0 mathches it.
     */
     pTimer->MCR = BIT(0) | BIT(1);
-    g_timer_count = 0;
     /* Step 4.4: CSMSIS enable timer0 IRQ */
-    NVIC_EnableIRQ(TIMER0_IRQn);
     /* Step 4.5: Enable the TCR. See table 427 on pg494 of LPC17xx_UM. */
     pTimer->TCR = 1;
 
@@ -99,6 +105,22 @@ __asm void TIMER0_IRQHandler(void)
 }
 
 /**
+* @brief: use CMSIS ISR for TIMER0 IRQ Handler
+* NOTE: This example shows how to save/restore all registers rather than just
+* those backed up by the exception stack frame. We add extra
+* push and pop instructions in the assembly routine.
+* The actual c_TIMER0_IRQHandler does the rest of irq handling
+*/
+__asm void TIMER1_IRQHandler(void)
+{
+    PRESERVE8
+    IMPORT c_TIMER1_IRQHandler
+		PUSH{r4-r11, lr}
+    BL c_TIMER1_IRQHandler
+		POP{r4-r11, pc}
+}
+
+/**
 * @brief: c TIMER0 IRQ Handler
 */
 void c_TIMER0_IRQHandler(void)
@@ -108,4 +130,22 @@ void c_TIMER0_IRQHandler(void)
     LPC_TIM0->IR = BIT(0);
     g_timer_count++;
 		k_switch_timer_i_process();
+}
+
+/**
+* @brief: c TIMER0 IRQ Handler
+*/
+void c_TIMER1_IRQHandler(void)
+{
+    /* ack interupt, see section 21.6.1 on pg 493 of LPC17XX_UM */
+    LPC_TIM1->IR = BIT(0);
+    g_10us_timer_count++;
+}
+
+void k_timer_start( void ) {
+	timer = g_10us_timer_count;
+}
+
+int k_timer_end( void ) {
+	return (int)(g_10us_timer_count - timer);
 }
