@@ -77,8 +77,10 @@ void set_test_procs() {
  */
 void proc1(void)
 {
-	
 #ifdef DEBUG_0
+	int endtime = 0;
+	void *block = NULL;
+	timer_start();
 	printf("G019_test: START\r\n");
 #endif
 	
@@ -90,8 +92,59 @@ void proc1(void)
 #ifdef DEBUG_0
 	printf("G019_test: %d/%d tests OK\r\n", num_tests_passed, num_tests);
 	printf("G019_test: %d/%d tests FAIL\r\n", num_tests_failed, num_tests);
+	printf("G019_test: tests took %d.%ds\r\n", timer_end() / 1000000, timer_end() % 1000000);
+	
+	timer_start();
+	send_message(TEST_1_PID, request_memory_block());
+	endtime = timer_end();
+	printf("G019_test: timing send_message: %dus\r\n", endtime);
+	
+	timer_start();
+	block = receive_message(&TEST_1_PID);
+	endtime = timer_end();
+	release_memory_block(block);
+	printf("G019_test: timing receive_message: %dus\r\n", endtime);
+	
+	timer_start();
+	block = request_memory_block();
+	endtime = timer_end();
+	printf("G019_test: timing request_memory_block: %dus\r\n", endtime);
+	
+	timer_start();
+	release_memory_block(block);
+	endtime = timer_end();
+	printf("G019_test: timing release_memory_block: %dus\r\n", endtime);
+	
+	send_message(TEST_1_PID, request_memory_block());
+	timer_start();
+	block = receive_first_message();
+	endtime = timer_end();
+	release_memory_block(block);
+	printf("G019_test: timing receive_first_message: %dus\r\n", endtime);
+	
+	timer_start();
+	delayed_send(TEST_1_PID, request_memory_block(), 10);
+	release_memory_block(receive_message(&TEST_1_PID));
+	printf("G019_test: testing 10ms delayed send: %dus\r\n", timer_end());
+	
 	printf("G019_test: END\r\n");
 #endif
+
+/****************************************************
+G019_test: START
+G019_test: test 1 OK
+G019_test: test 2 OK
+G019_test: 2/2 tests OK
+G019_test: 0/2 tests FAIL
+G019_test: tests took 0.86065s
+G019_test: timing send_message: 5us
+G019_test: timing receive_message: 2us
+G019_test: timing request_memory_block: 3us
+G019_test: timing release_memory_block: 2us
+G019_test: timing receive_first_message: 3us
+G019_test: testing 10ms delayed send: 9515us
+G019_test: END
+*****************************************************/
 
 	receive_message(0);
 }
