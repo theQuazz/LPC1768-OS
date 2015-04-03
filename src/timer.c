@@ -12,7 +12,7 @@
 #define BIT(X) (1<<X)
 
 volatile uint32_t g_timer_count = 0; // increment every 1 ms
-volatile uint32_t g_10us_timer_count = 0; // increment every 10 us
+volatile uint32_t g_1us_timer_count = 0; // increment every 10 us
 volatile uint32_t timer = 0;
 
 /**
@@ -62,7 +62,7 @@ uint32_t timer_init(uint8_t n_timer)
 				NVIC_EnableIRQ(TIMER0_IRQn);
     } else { /* other timer not supported yet */
         pTimer = (LPC_TIM_TypeDef *) LPC_TIM1;
-				g_10us_timer_count = 0;
+				g_1us_timer_count = 0;
 				// 2*(11 + 1)*(1/25) * 10^(-6) s = 0.96^(-6) s = 0.96 us
 				pTimer->PR = 11;
 				NVIC_EnableIRQ(TIMER1_IRQn);
@@ -139,13 +139,13 @@ void c_TIMER1_IRQHandler(void)
 {
     /* ack interupt, see section 21.6.1 on pg 493 of LPC17XX_UM */
     LPC_TIM1->IR = BIT(0);
-    g_10us_timer_count++;
+    g_1us_timer_count++;
 }
 
 void k_timer_start( void ) {
-	timer = g_10us_timer_count;
+	timer = g_1us_timer_count;
 }
 
 int k_timer_end( void ) {
-	return (int)(g_10us_timer_count - timer);
+	return (int)(g_1us_timer_count - timer);
 }
